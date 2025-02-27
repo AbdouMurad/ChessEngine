@@ -40,10 +40,10 @@ int rookPst[] = {
      0,  0,  0,  0,  0,  0,  0,  0,};
 int queenPst[] = {
     -20,-10,-10, -5, -5,-10,-10,-20
-    -10,  0,  5,  0,  0,  0,  0,-10,
-    -10,  5,  5,  5,  5,  5,  0,-10,
-     0,  0,  5,  5,  5,  5,  0, -5,
-    -5,  0,  5,  5,  5,  5,  0, -5,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+     -5,  0,  5,  5,  5,  5,  0, -5,
     -10,  0,  5,  5,  5,  5,  0,-10,
     -10,  0,  0,  0,  0,  0,  0,-10,
     -20,-10,-10, -5, -5,-10,-10,-20,};
@@ -197,10 +197,12 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
         maxEval = -1000000;
         //generate positions
         
-        for (i = 0, flip = 1; i < 3 && flip; ++i){
+        for (i = 0, flip = 1; i < 5 && flip; ++i){
             if (i == 0) copyPiece = (*game).whitePawns;
             else if (i == 1) copyPiece = (*game).whiteKnights;
             else if (i == 2) copyPiece = (*game).whiteBishops;
+            else if (i == 3) copyPiece = (*game).whiteRooks;
+            else if (i == 4) copyPiece = (*game).whiteQueen;
             while (flip && copyPiece){
                 position = __builtin_ctzll(copyPiece);
                 copyPiece &= copyPiece -1;
@@ -554,6 +556,391 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         }
                     }
                 }
+                else if (i == 3) //rook
+                {
+                    printf("here\n");
+                    int r;
+                    int c;
+                    int k; // 0 - blocker found
+                    //up
+                    for (r = position/8 + 1, c = position % 8, k = 1; k && r < 8; ++r){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ty\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d tn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //down
+                    for (r = position/8 - 1, c = position % 8, k = 1; k && r >= 0; --r){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d by\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d bn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //left
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ly\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ln\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //right
+                    for (r = position/8, c = position % 8 -1, k = 1; k && c >= 0; --c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ry\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteRooks = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d rn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                }    
+                else if (i == 4) //queen
+                {
+                    int r;
+                    int c;
+                    int k; // 0 - blocker found
+                    //top left
+                    for (r = position/8 + 1, c = position % 8 + 1, k = 1; k && r < 8 && c < 8; ++r, ++c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d tly\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d tln\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //top right
+                    for (r = position/8 + 1, c = position % 8 - 1, k = 1; k && r < 8 && c >= 0; ++r, --c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d try\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d trn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //bottom left
+                    for (r = position/8 - 1, c = position % 8 + 1, k = 1; k && r >= 0 && c < 8; --r, ++c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d bly\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d bln\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //bottom right
+                    for (r = position/8 - 1, c = position % 8 - 1, k = 1; k && r >= 0 && c >= 0; --r, --c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d bry\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d brn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //up
+                    for (r = position/8 + 1, c = position % 8, k = 1; k && r < 8; ++r){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ty\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d tn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //down
+                    for (r = position/8 - 1, c = position % 8, k = 1; k && r >= 0; --r){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d by\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d bn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //left
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ly\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ln\n",newPiece,eval,maxEval);
+                        }
+                    }
+                    //right
+                    for (r = position/8, c = position % 8 -1, k = 1; k && c >= 0; --c){
+                        singlePiece = 1ULL << (r*8 + c);
+                        newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
+                        if (singlePiece & whiteBitboard(game)) k = 0;
+                        else if (singlePiece & blackBitBoard(game)){
+                            //check which black piece is attacked
+                            if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
+                            else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
+                            else if (newPiece & (*game).blackBishops) newGame.blackBishops -= singlePiece;
+                            else if (newPiece & (*game).blackRooks) newGame.blackRooks -= singlePiece;
+                            else if (newPiece & (*game).blackQueen) newGame.blackQueen -= singlePiece;
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d ry\n",newPiece,eval,maxEval);
+                            k = 0;
+                        }
+                        else {
+                            newGame.whiteQueen = newPiece;
+                            eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves);
+                            newGame = (*game);
+                            if (eval > maxEval) maxEval = eval;
+                            if (eval > alpha) alpha = eval;
+                            if (beta <= alpha) flip = 0;
+                            printf("%llu - %d -- %d rn\n",newPiece,eval,maxEval);
+                        }
+                    }
+                }
             }
         }
         return maxEval;
@@ -572,14 +959,14 @@ void setupBlankGame(struct gameBoard *game){
     (*game).whiteKnights = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).whiteBishops = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).whiteRooks = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    (*game).whiteQueen = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    (*game).whiteQueen = 0b1000000000000000000000000000000000000000000000000000000000000000;
     (*game).whiteKing = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).whiteCastle = 3;
 
     (*game).blackPawns = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).blackKnights = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).blackBishops = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    (*game).blackRooks = 0b1000000000000000000000000000000000000000000000000000000000000000;
+    (*game).blackRooks = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).blackQueen = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).blackKing = 0b0000000000000000000000000000000000000000000000000000000000000000;
     (*game).blackCastle = 3;
@@ -613,6 +1000,7 @@ int main(){
     setupGame(&game);
     //setupBlankGame(&game);
     int score = evaluate(&game);
+    printf("SCORE: %d\n",score);
     int newScore = alphabeta(1,&game,0,-10000000,1000000, &moves);
     //printf("%d\n",score);
     printf("newScore %d - score %d\n",newScore,score);
