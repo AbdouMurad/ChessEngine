@@ -120,7 +120,7 @@ int evaluate(struct gameBoard *game){
     while (current){
         coord = __builtin_ctzll(current);
         current &= current -1;
-        score = score + kingPst[coord];
+        score = score + 1000000 + kingPst[coord];
     }
 
     //Black
@@ -158,7 +158,7 @@ int evaluate(struct gameBoard *game){
     while (current){
         coord = __builtin_ctzll(current);
         current &= current -1;
-        score = score - kingPst[63 - coord];  
+        score = score - (1000000 + kingPst[63 - coord]);  
     }
     return score;
 }
@@ -190,27 +190,29 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
 
     unsigned long long int singlePiece; //contains single piece
 
-    int c,r,k,flip,i;
+    int c,r,k,i,flip;
+    flip = 0;
     //assume computer is always white
     if (!turn) //computer turn
     { 
         int maxEval = -1000000;
         //generate positions
         
-        for (i = 0, flip = 1; i < 6 && flip; ++i){
+        for (i = 5; i >= 0; --i){
+            if (flip) break;
             if (i == 0) copyPiece = (*game).whitePawns;
             else if (i == 1) copyPiece = (*game).whiteKnights;
             else if (i == 2) copyPiece = (*game).whiteBishops;
             else if (i == 3) copyPiece = (*game).whiteRooks;
             else if (i == 4) copyPiece = (*game).whiteQueen;
             else if (i == 5) copyPiece = (*game).whiteKing;
-            while (flip && copyPiece){
+            while (copyPiece){
                 position = __builtin_ctzll(copyPiece);
                 copyPiece &= copyPiece -1;
                 if (i == 0) //pawn
                 {
                     //pawn move 2 forward
-                    if (flip && position/8 == 1){
+                    if (position/8 == 1){
                         singlePiece = (1ULL << position + 16);
                         if (!(allBitBoard(game) & singlePiece)) {
                             
@@ -225,12 +227,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 16;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
+                            
                         }
                     }
                     //pawn move 1 forward
                     singlePiece = (1ULL << position + 8);
-                    if (flip && (position/8 < 7) && !(allBitBoard(game) & singlePiece)) { //pawn move 1 square
+                    if ( (position/8 < 7) && !(allBitBoard(game) & singlePiece)) { //pawn move 1 square
 
                         newPiece = (*game).whitePawns - (1ULL << position) + singlePiece;
                         newGame.whitePawns = newPiece;
@@ -243,12 +249,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 8;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
 
                     //check diagonal pawn attack - left
                     singlePiece = 1ULL << (position + 9);
-                    if (flip && (position % 8 != 7) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece) && (blackBitBoard(game) & singlePiece) ) {
+                    if ((position % 8 != 7) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece) && (blackBitBoard(game) & singlePiece) ) {
                         newPiece = (*game).whitePawns - (1ULL << position) + singlePiece;
                         
                         //check which black piece is attacked
@@ -268,11 +277,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 9;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha){
+                                flip = 1;
+                                break;
+                            }
                     }
                     //check diagonal pawn attack - right
                     singlePiece = 1ULL << (position + 7);
-                    if (flip && (position/8 < 7) && (position % 8) && !(whiteBitboard(game) & singlePiece) && (blackBitBoard(game) & singlePiece)) {
+                    if ((position/8 < 7) && (position % 8) && !(whiteBitboard(game) & singlePiece) && (blackBitBoard(game) & singlePiece)) {
                         
                         newPiece = (*game).whitePawns - (1ULL << position) + singlePiece;
                         //check which black piece is attacked
@@ -292,7 +304,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 7;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                            flip = 1;
+                            break;
+                        }
                     }
 
                     //PROMOTION - to be completed
@@ -301,7 +316,7 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                 {
                     //left up
                     singlePiece = 1ULL << (position + 10);
-                    if (flip && (position % 8 < 6) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 < 6) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -319,12 +334,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 10;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
 
                     //left down
                     singlePiece = 1ULL << (position - 6);
-                    if (flip && (position % 8 < 6) && (position/8 > 0) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 < 6) && (position/8 > 0) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -342,11 +360,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 6;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //right up
                     singlePiece = 1ULL << (position + 6);
-                    if (flip && (position % 8 > 1) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 > 1) && (position/8 < 7) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -364,11 +385,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 6;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //right down
                     singlePiece = 1ULL << (position - 10);
-                    if (flip && (position % 8 > 1) && (position/8 > 0) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 > 1) && (position/8 > 0) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -386,11 +410,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position -10;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //down right
                     singlePiece = 1ULL << (position - 17);
-                    if (flip && (position % 8 > 0) && (position/8 > 1) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 > 0) && (position/8 > 1) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -408,11 +435,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 17;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //down left
                     singlePiece = 1ULL << (position - 15);
-                    if (flip && (position % 8 < 7) && (position/8 > 1) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 < 7) && (position/8 > 1) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -430,11 +460,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 15;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //up right
                     singlePiece = 1ULL << (position + 15);
-                    if (flip && (position % 8 > 0) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 > 0) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -452,11 +485,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 15;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //up left
                     singlePiece = 1ULL << (position + 17);
-                    if (flip && (position % 8 < 7) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
+                    if ((position % 8 < 7) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).whiteKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                         else if (newPiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -474,14 +510,17 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 17;
                             }
                         if (eval > alpha) alpha = eval;
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                 }
                 else if (i == 2)//bishop
                 {
                     //k = 0 blocker found
                     //top left
-                    for (r = position/8 + 1, c = position % 8 + 1, k = 1; flip && k && r < 8 && c < 8; ++r, ++c){
+                    for (r = position/8 + 1, c = position % 8 + 1, k = 1; k && r < 8 && c < 8; ++r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -502,7 +541,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -516,11 +558,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //top right
-                    for (r = position/8 + 1, c = position % 8 - 1, k = 1;flip && k && r < 8 && c >= 0; ++r, --c){
+                    for (r = position/8 + 1, c = position % 8 - 1, k = 1;k && r < 8 && c >= 0; ++r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -541,7 +587,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -555,11 +604,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom left
-                    for (r = position/8 - 1, c = position % 8 + 1, k = 1; flip && k && r >= 0 && c < 8; --r, ++c){
+                    for (r = position/8 - 1, c = position % 8 + 1, k = 1; k && r >= 0 && c < 8; --r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -577,10 +630,13 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             { 
                                 maxEval = eval;
                                 *start = position;
-                                *end = position + (r*8+c);
+                                *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -594,11 +650,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom right
-                    for (r = position/8 - 1, c = position % 8 - 1, k = 1;flip && k && r >= 0 && c >= 0; --r, --c){
+                    for (r = position/8 - 1, c = position % 8 - 1, k = 1;k && r >= 0 && c >= 0; --r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -619,7 +679,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 +c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -633,14 +696,18 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                 }
                 else if (i == 3) //rook
                 {
                     //up
-                    for (r = position/8 + 1, c = position % 8, k =1; flip && k && r < 8; ++r){
+                    for (r = position/8 + 1, c = position % 8, k =1; k && r < 8; ++r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -661,7 +728,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -675,11 +745,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //down
-                    for (r = position/8 - 1, c = position % 8, k = 1;flip && k && r >= 0; --r){
+                    for (r = position/8 - 1, c = position % 8, k = 1;k && r >= 0; --r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -700,7 +774,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -714,11 +791,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                         }
                     }
+                    if (flip) break;
                     //left
-                    for (r = position/8, c = position % 8 + 1, k = 1;flip && k && c < 8; ++c){
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -739,7 +820,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -753,11 +837,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //right
-                    for (r = position/8, c = position % 8 -1, k = 1;flip && k && c >= 0; --c){
+                    for (r = position/8, c = position % 8 -1, k = 1; k && c >= 0; --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -778,7 +866,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -792,14 +883,18 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                 }    
                 else if (i == 4) //queen
                 {
                     //top left
-                    for (r = position/8 + 1, c = position % 8 + 1, k = 1;flip && k && r < 8 && c < 8; ++r, ++c){
+                    for (r = position/8 + 1, c = position % 8 + 1, k = 1;k && r < 8 && c < 8; ++r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -820,7 +915,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -834,11 +932,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //top right
-                    for (r = position/8 + 1, c = position % 8 - 1, k = 1;flip && k && r < 8 && c >= 0; ++r, --c){
+                    for (r = position/8 + 1, c = position % 8 - 1, k = 1; k && r < 8 && c >= 0; ++r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -859,7 +961,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -873,11 +978,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom left
-                    for (r = position/8 - 1, c = position % 8 + 1, k = 1;flip && k && r >= 0 && c < 8; --r, ++c){
+                    for (r = position/8 - 1, c = position % 8 + 1, k = 1;k && r >= 0 && c < 8; --r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -898,7 +1007,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -912,11 +1024,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom right
-                    for (r = position/8 - 1, c = position % 8 - 1, k = 1;flip && k && r >= 0 && c >= 0; --r, --c){
+                    for (r = position/8 - 1, c = position % 8 - 1, k = 1; k && r >= 0 && c >= 0; --r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -937,7 +1053,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -951,11 +1070,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //up
-                    for (r = position/8 + 1, c = position % 8, k = 1;flip && k && r < 8; ++r){
+                    for (r = position/8 + 1, c = position % 8, k = 1;k && r < 8; ++r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -976,7 +1099,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -990,11 +1116,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //down
-                    for (r = position/8 - 1, c = position % 8, k = 1;flip && k && r >= 0; --r){
+                    for (r = position/8 - 1, c = position % 8, k = 1;k && r >= 0; --r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -1015,7 +1145,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1029,11 +1162,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //left
-                    for (r = position/8, c = position % 8 + 1, k = 1;flip && k && c < 8; ++c){
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -1054,7 +1191,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1068,11 +1208,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //right
-                    for (r = position/8, c = position % 8 -1, k = 1;flip && k && c >= 0; --c){
+                    for (r = position/8, c = position % 8 -1, k = 1; k && c >= 0; --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->whiteQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & whiteBitboard(game)) k = 0;
@@ -1093,7 +1237,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1107,15 +1254,19 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + (r*8 + c);
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                 }
                 else if (i == 5) //king
                 {   
                     //up
                     singlePiece = 1ULL << position + 8;
-                    if (flip && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1133,13 +1284,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 8;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
 
                         
                     }
                     //left 
                     singlePiece = 1ULL << position + 1;
-                    if (flip && position %8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1158,13 +1312,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 1;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //right 
                     singlePiece = 1ULL << position - 1;
-                    if (flip && position %8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1183,13 +1340,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 1;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //down 
                     singlePiece = 1ULL << position - 8;
-                    if (flip && position /8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position /8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1208,13 +1368,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 8;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //up left 
                     singlePiece = 1ULL << position + 9;
-                    if (flip && position %8 < 7 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1233,13 +1396,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 9;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //up right 
                     singlePiece = 1ULL << position + 7;
-                    if (flip && position %8 > 0 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1258,13 +1424,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position + 7;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //down left 
                     singlePiece = 1ULL << position - 7;
-                    if (flip && position %8 < 7 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1283,13 +1452,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 7;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
                     //down right 
                     singlePiece = 1ULL << position - 9;
-                    if (flip && position %8 > 0 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & blackBitBoard(game)){
                             if (singlePiece & (*game).blackPawns) newGame.blackPawns -= singlePiece;
                             else if (singlePiece & (*game).blackKnights) newGame.blackKnights -= singlePiece;
@@ -1308,7 +1480,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                                 *end = position - 9;
                             }
                             if (eval > alpha) alpha = eval;
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     
                             
                     }
@@ -1324,20 +1499,21 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
         int minEval = 1000000;
         //generate positions
         
-        for (i = 0, flip = 1; i < 6 && flip; ++i){
+        for (i = 5; i >= 0; --i){
+            if (flip) break;
             if (i == 0) copyPiece = (*game).blackPawns;
             else if (i == 1) copyPiece = (*game).blackKnights;
             else if (i == 2) copyPiece = (*game).blackBishops;
             else if (i == 3) copyPiece = (*game).blackRooks;
             else if (i == 4) copyPiece = (*game).blackQueen;
             else if (i == 5) copyPiece = (*game).blackKing;
-            while (flip && copyPiece){
+            while ( copyPiece){
                 position = __builtin_ctzll(copyPiece);
                 copyPiece &= copyPiece -1;
                 if (i == 0) //pawn
                 {
                     //pawn move 2 forward
-                    if (flip && position/8 == 6){
+                    if ( position/8 == 6){
                         singlePiece = (1ULL << position - 16);
                         if (!(allBitBoard(game) & singlePiece)) {
                             
@@ -1347,12 +1523,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame.blackPawns = (*game).blackPawns;
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
                     //pawn move 1 forward
                     singlePiece = (1ULL << position - 8);
-                    if (flip && (position/8 > 0) && !(allBitBoard(game) & singlePiece)) { //pawn move 1 square
+                    if ( (position/8 > 0) && !(allBitBoard(game) & singlePiece)) { //pawn move 1 square
 
                         newPiece = (*game).blackPawns - (1ULL << position) + singlePiece;
                         newGame.blackPawns = newPiece;
@@ -1360,12 +1539,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame.blackPawns = (*game).blackPawns;
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
 
                     //check diagonal pawn attack - left
                     singlePiece = 1ULL << (position - 7);
-                    if (flip && (position % 8 < 7) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece) && (whiteBitboard(game) & singlePiece) ) {
+                    if ( (position % 8 < 7) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece) && (whiteBitboard(game) & singlePiece) ) {
                         newPiece = (*game).blackPawns - (1ULL << position) + singlePiece;
                         
                         //check which black piece is attacked
@@ -1380,11 +1562,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //check diagonal pawn attack - right
                     singlePiece = 1ULL << (position - 9);
-                    if (flip && (position/8 > 0) && (position % 8 > 0) && !(blackBitBoard(game) & singlePiece) && (whiteBitboard(game) & singlePiece)) {
+                    if ( (position/8 > 0) && (position % 8 > 0) && !(blackBitBoard(game) & singlePiece) && (whiteBitboard(game) & singlePiece)) {
                         
                         newPiece = (*game).blackPawns - (1ULL << position) + singlePiece;
                         //check which black piece is attacked
@@ -1399,7 +1584,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
                     //PROMOTION - to be completed
                 }            
@@ -1407,7 +1595,7 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                 {
                     //left up
                     singlePiece = 1ULL << (position + 10);
-                    if (flip && (position % 8 < 6) && (position/8 < 7) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 < 6) && (position/8 < 7) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1420,12 +1608,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                     }
 
                     //left down
                     singlePiece = 1ULL << (position - 6);
-                    if (flip && (position % 8 < 6) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 < 6) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1438,11 +1629,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //right up
                     singlePiece = 1ULL << (position + 6);
-                    if (flip && (position % 8 > 1) && (position/8 < 7) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 > 1) && (position/8 < 7) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1455,11 +1649,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //right down
                     singlePiece = 1ULL << (position - 10);
-                    if (flip && (position % 8 > 1) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 > 1) && (position/8 > 0) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1472,11 +1669,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //down right
                     singlePiece = 1ULL << (position - 17);
-                    if (flip && (position % 8 > 0) && (position/8 > 1) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 > 0) && (position/8 > 1) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1489,11 +1689,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //down left
                     singlePiece = 1ULL << (position - 15);
-                    if (flip && (position % 8 < 7) && (position/8 > 1) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 < 7) && (position/8 > 1) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1506,11 +1709,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //up right
                     singlePiece = 1ULL << (position + 15);
-                    if (flip && (position % 8 > 0) && (position/8 < 6) && !(blackBitBoard(game) & singlePiece)) {
+                    if ( (position % 8 > 0) && (position/8 < 6) && !(blackBitBoard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1523,11 +1729,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //up left
                     singlePiece = 1ULL << (position + 17);
-                    if (flip && (position % 8 < 7) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
+                    if ( (position % 8 < 7) && (position/8 < 6) && !(whiteBitboard(game) & singlePiece)) {
                         newPiece = (*game).blackKnights - (1ULL << position) + singlePiece;
                         if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                         else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -1540,14 +1749,17 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
-                        if (beta <= alpha) flip = 0;
+                        if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                 }
                 else if (i == 2)//bishop
                 {
                     //k = 0 blocker found
                     //top left
-                    for (r = position/8 + 1, c = position % 8 + 1, k = 1; flip && k && r < 8 && c < 8; ++r, ++c){
+                    for (r = position/8 + 1, c = position % 8 + 1, k = 1;  k && r < 8 && c < 8; ++r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1563,7 +1775,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break;
+                            }
                             k = 0;
                         }
                         else {
@@ -1572,11 +1787,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //top right
-                    for (r = position/8 + 1, c = position % 8 - 1, k = 1;flip && k && r < 8 && c >= 0; ++r, --c){
+                    for (r = position/8 + 1, c = position % 8 - 1, k = 1; k && r < 8 && c >= 0; ++r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1592,7 +1811,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1601,11 +1823,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom left
-                    for (r = position/8 - 1, c = position % 8 + 1, k = 1; flip && k && r >= 0 && c < 8; --r, ++c){
+                    for (r = position/8 - 1, c = position % 8 + 1, k = 1;  k && r >= 0 && c < 8; --r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1621,7 +1847,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1630,11 +1859,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom right
-                    for (r = position/8 - 1, c = position % 8 - 1, k = 1;flip && k && r >= 0 && c >= 0; --r, --c){
+                    for (r = position/8 - 1, c = position % 8 - 1, k = 1; k && r >= 0 && c >= 0; --r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackBishops - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1650,7 +1883,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1659,14 +1895,18 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                 }
                 else if (i == 3) //rook
                 {
                     //up
-                    for (r = position/8 + 1, c = position % 8, k = 1; flip && k && r < 8; ++r){
+                    for (r = position/8 + 1, c = position % 8, k = 1;  k && r < 8; ++r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->blackRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1682,7 +1922,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1691,12 +1934,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                     }
+                    if (flip) break;
                     //down
-                    for (r = position/8 - 1, c = position % 8, k = 1;flip && k && r >= 0; --r){
+                    for (r = position/8 - 1, c = position % 8, k = 1; k && r >= 0; --r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->blackRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1712,7 +1959,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1721,12 +1971,16 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                     }
+                    if (flip) break;
                     //left
-                    for (r = position/8, c = position % 8 + 1, k = 1;flip && k && c < 8; ++c){
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = game->blackRooks - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1742,7 +1996,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1751,15 +2008,19 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                     }
+                    if (flip) break;
                 }    
                 else if (i == 4) //queen
                 {
                     //top left
-                    for (r = position/8 + 1, c = position % 8 + 1, k = 1;flip && k && r < 8 && c < 8; ++r, ++c){
+                    for (r = position/8 + 1, c = position % 8 + 1, k = 1; k && r < 8 && c < 8; ++r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1775,7 +2036,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1784,11 +2048,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //top right
-                    for (r = position/8 + 1, c = position % 8 - 1, k = 1;flip && k && r < 8 && c >= 0; ++r, --c){
+                    for (r = position/8 + 1, c = position % 8 - 1, k = 1; k && r < 8 && c >= 0; ++r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1804,7 +2072,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1813,11 +2084,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom left
-                    for (r = position/8 - 1, c = position % 8 + 1, k = 1;flip && k && r >= 0 && c < 8; --r, ++c){
+                    for (r = position/8 - 1, c = position % 8 + 1, k = 1; k && r >= 0 && c < 8; --r, ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1833,7 +2108,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1842,11 +2120,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //bottom right
-                    for (r = position/8 - 1, c = position % 8 - 1, k = 1;flip && k && r >= 0 && c >= 0; --r, --c){
+                    for (r = position/8 - 1, c = position % 8 - 1, k = 1; k && r >= 0 && c >= 0; --r, --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1862,7 +2144,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1871,11 +2156,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //up
-                    for (r = position/8 + 1, c = position % 8, k = 1;flip && k && r < 8; ++r){
+                    for (r = position/8 + 1, c = position % 8, k = 1; k && r < 8; ++r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1891,7 +2180,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1900,11 +2192,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //down
-                    for (r = position/8 - 1, c = position % 8, k = 1;flip && k && r >= 0; --r){
+                    for (r = position/8 - 1, c = position % 8, k = 1; k && r >= 0; --r){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1920,7 +2216,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1929,11 +2228,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //left
-                    for (r = position/8, c = position % 8 + 1, k = 1;flip && k && c < 8; ++c){
+                    for (r = position/8, c = position % 8 + 1, k = 1; k && c < 8; ++c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1949,7 +2252,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1958,11 +2264,15 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                     //right
-                    for (r = position/8, c = position % 8 -1, k = 1;flip && k && c >= 0; --c){
+                    for (r = position/8, c = position % 8 -1, k = 1; k && c >= 0; --c){
                         singlePiece = 1ULL << (r*8 + c);
                         newPiece = (*game).blackQueen - (1ULL << position) + singlePiece;
                         if (singlePiece & blackBitBoard(game)) k = 0;
@@ -1978,7 +2288,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                             k = 0;
                         }
                         else {
@@ -1987,15 +2300,19 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                         }
                     }
+                    if (flip) break;
                 }
                 else if (i == 5) //king
                 {   
                     //up
                     singlePiece = 1ULL << position + 8;
-                    if (flip && position/8 < 7 && !(singlePiece & blackBitBoard(game))) {
+                    if ( position/8 < 7 && !(singlePiece & blackBitBoard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2008,11 +2325,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //left 
                     singlePiece = 1ULL << position + 1;
-                    if (flip && position %8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2025,11 +2345,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //right 
                     singlePiece = 1ULL << position - 1;
-                    if (flip && position %8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2042,11 +2365,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //down 
                     singlePiece = 1ULL << position - 8;
-                    if (flip && position /8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position /8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2059,11 +2385,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //up left 
                     singlePiece = 1ULL << position + 9;
-                    if (flip && position %8 < 7 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2076,11 +2405,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //up right 
                     singlePiece = 1ULL << position + 7;
-                    if (flip && position %8 > 0 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && position/8 < 7 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2093,11 +2425,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //down left 
                     singlePiece = 1ULL << position - 7;
-                    if (flip && position %8 < 7 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 < 7 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2110,11 +2445,14 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //down right 
                     singlePiece = 1ULL << position - 9;
-                    if (flip && position %8 > 0 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
+                    if ( position %8 > 0 && position/8 > 0 && !(singlePiece & whiteBitboard(game))) {
                         if (singlePiece & whiteBitboard(game)){
                             if (newPiece & (*game).whitePawns) newGame.whitePawns -= singlePiece;
                             else if (newPiece & (*game).whiteKnights) newGame.whiteKnights -= singlePiece;
@@ -2127,7 +2465,10 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                             newGame = (*game);
                             if (eval < minEval) minEval = eval;
                             if (eval < beta) beta = eval; 
-                            if (beta <= alpha) flip = 0;
+                            if (beta <= alpha) {
+                                flip = 1;
+                                break ;
+                            }
                     }
                     //CASTLE
                 }
@@ -2175,9 +2516,9 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00001011ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
-    0b11100100ULL << 8  |  // Row 7
+    0b00001001ULL << 24 |  // Row 5
+    0b00000010ULL << 16 |  // Row 6
+    0b11110100ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     (*game).whiteKnights =
     0b00000000ULL << 56 |  // Row 1
@@ -2185,7 +2526,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000100ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
     0b01000000ULL;         // Row 8
     (*game).whiteBishops =
@@ -2233,18 +2574,18 @@ void setupBlankGame(struct gameBoard *game)
 
     (*game).blackPawns =
     0b00000000ULL << 56 |  // Row 1
-    0b11100001ULL << 48 |  // Row 2
-    0b00010110ULL << 40 |  // Row 3
+    0b11110011ULL << 48 |  // Row 2
+    0b00000100ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00010000ULL << 24 |  // Row 5
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
 
     (*game).blackKnights =
-    0b01000010ULL << 56 |  // Row 1 (0x42)
+    0b00000010ULL << 56 |  // Row 1 (0x42)
     0b00000000ULL << 48 |  // Row 2
-    0b00000000ULL << 40 |  // Row 3
+    0b00100000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
@@ -2252,10 +2593,10 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL;         // Row 8
 
     (*game).blackBishops =
-    0b00100100ULL << 56 |  // Row 1 (0x24)
+    0b00100000ULL << 56 |  // Row 1 (0x24)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
+    0b00001000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
@@ -2311,8 +2652,6 @@ void setupGame(struct gameBoard *game){
     (*game).blackKing = 0b0001000000000000000000000000000000000000000000000000000000000000;
     (*game).blackCastle = 3;}
 int main(){
-
-
     //assume computer is white for now
 
     int moves = 0;
@@ -2325,10 +2664,14 @@ int main(){
     int score = evaluate(&game);
     printf("SCORE: %d\n",score);
     int start, end; //start position and end position of most optimal move
+<<<<<<< HEAD
     int newScore = alphabeta(8,&game,0,-10000000,1000000, &moves,&start,&end);
+=======
+    int newScore = alphabeta(6,&game,0,-10000000,1000000, &moves,&start,&end);
+>>>>>>> refs/remotes/origin/main
     
     //printf("%d\n",score);
-    printf("newScore %d - score %d\n",newScore,score);
+    printf("newScore: %d  score: %d\n",newScore,score);
     printf("moves: %d\n", moves);
     printf("Starting Move: %d End Move: %d\n",start,end);
     printBoard(&game);
