@@ -1468,7 +1468,7 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                         else if (newPiece & (*game).whiteQueen) newGame.whiteQueen -= singlePiece;
 
                         newGame.blackKnights = newPiece;
-                        eval = alphabeta(depth -1,&newGame,1,alpha,beta,moves,start,end);
+                        eval = alphabeta(depth -1,&newGame,0,alpha,beta,moves,start,end);
                         newGame = (*game);
                         if (eval < minEval) minEval = eval;
                         if (eval < beta) beta = eval; 
@@ -2320,13 +2320,12 @@ int main(){
 
 
     struct gameBoard game;
-    //setupGame(&game);
-    setupBlankGame(&game);
-    printf("%llu\n",game.blackPawns);
+    setupGame(&game);
+    //setupBlankGame(&game);
     int score = evaluate(&game);
     printf("SCORE: %d\n",score);
     int start, end; //start position and end position of most optimal move
-    int newScore = alphabeta(7,&game,0,-10000000,1000000, &moves,&start,&end);
+    int newScore = alphabeta(8,&game,0,-10000000,1000000, &moves,&start,&end);
     
     //printf("%d\n",score);
     printf("newScore %d - score %d\n",newScore,score);
