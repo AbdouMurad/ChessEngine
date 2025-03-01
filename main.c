@@ -909,7 +909,7 @@ int alphabeta(int depth, struct gameBoard *game, int turn, int alpha, int beta, 
                     }
                     if (flip) break;
                 }    
-                else if (i == 4) //queen
+                else if (i == 4) //queen - 
                 {
                     //top left
                     for (r = position/8 + 1, c = position % 8 + 1; r < 8 && c < 8; ++r, ++c){
