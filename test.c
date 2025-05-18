@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Board.h"
-#include "AlphaBeta3.h"
+#include "AlphaBeta.h"
 
 void moveInput(int *start, int *end){
     printf("Which piece to move?\n");
@@ -19,7 +19,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000000ULL << 24 |  // Row 5
+    0b0000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
@@ -49,7 +49,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000000ULL;         // Row 8
+    0b11111111ULL;         // Row 8
 
     (*game).whiteQueen =
     0b00000000ULL << 56 |  // Row 1
@@ -57,7 +57,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b000000000ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x10)
     0b00000000ULL;         // Row 8
 
@@ -69,7 +69,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
-    0b10000000ULL;         // Row 8
+    0b00000000ULL;         // Row 8
 
     (*game).whiteCastle = 3;
 
@@ -82,7 +82,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b01100000ULL << 8  |  // Row 7
+    0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
 
     (*game).blackKnights =
@@ -106,7 +106,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL;         // Row 8
 
     (*game).blackRooks =
-    0b00000000ULL << 56 |  // Row 1 (0x81)
+    0b11111111ULL << 56 |  // Row 1 (0x81)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
@@ -131,7 +131,7 @@ void setupBlankGame(struct gameBoard *game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b01000000ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
 
@@ -147,7 +147,7 @@ void setupGame(struct gameBoard *game){
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b10110111ULL << 8  |  // Row 7
+    0b11111111ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     (*game).whiteKnights =
     0b00000000ULL << 56 |  // Row 1
@@ -175,7 +175,7 @@ void setupGame(struct gameBoard *game){
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000001ULL;         // Row 8
+    0b10000001ULL;         // Row 8
 
     (*game).whiteQueen =
     0b00000000ULL << 56 |  // Row 1
@@ -191,11 +191,11 @@ void setupGame(struct gameBoard *game){
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00001000ULL << 32 |  // Row 4
+    0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
-    0b00000000ULL;         // Row 8
+    0b00001000ULL;         // Row 8
 
     (*game).whiteCastle = 3;
 
@@ -203,7 +203,7 @@ void setupGame(struct gameBoard *game){
 
     (*game).blackPawns =
     0b00000000ULL << 56 |  // Row 1
-    0b11110111ULL << 48 |  // Row 2
+    0b11111111ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
@@ -252,7 +252,7 @@ void setupGame(struct gameBoard *game){
     0b00000000ULL;         // Row 8
 
     (*game).blackKing =
-    0b00000000ULL << 56 |  // Row 1 (0x10)
+    0b00001000ULL << 56 |  // Row 1 (0x10)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
@@ -270,46 +270,18 @@ int main(){
     int turn = 0; //0 - white / 1 - black 
 
     struct gameBoard game;
-    setupBlankGame(&game);
+    setupGame(&game);
     //setupBlankGame(&game);
     int depth = 7;
     int newScore, currentScore;
     int start, end;
     printBoard(&game,0,0);
-
-
-    struct MoveList list;
-    generateMoves(&game, &list, White);
-    printMoves(&list);
-    printf("Game Over: %d\n", gameOver(White, &game));
-
-    return 0;
-
+        currentScore = evaluate(&game);
+        newScore =alphabeta(depth,depth,&game,0,-10000000,1000000, &moves,&start,&end);
+        printf("Predicted Score: %d / Current Score: %d\n",newScore,currentScore);
+        printf("Moves Calculated: %d / Depth: %d\n", moves,depth);
+        printf("Starting Move: %d End Move: %d\n\n\n",start,end);
+        makeMove(&game, start, end);
+        printBoard(&game,start,end);
+     
 }
-/*
-    while(1){
-        #ifdef SECOND
-            currentScore = evaluate(&game);
-            newScore =alphabeta(depth,depth,&game,0,-10000000,1000000, &moves,&start,&end);
-            printf("Predicted Score: %d / Current Score: %d\n",newScore,currentScore);
-            printf("Moves Calculated: %d / Depth: %d\n", moves,depth);
-            printf("Starting Move: %d End Move: %d\n\n\n",start,end);
-            makeMove(&game,start,end);
-            printBoard(&game,start,end);
-            moveInput(&start,&end);
-            makeMove(&game,start,end);
-            printBoard(&game,start,end);
-        #else
-            moveInput(&start,&end);
-            makeMove(&game, start, end);
-            printBoard(&game,start,end);
-            currentScore = evaluate(&game);
-            newScore =alphabeta(depth,depth,&game,1,-10000000,1000000, &moves,&start,&end);
-            printf("Predicted Score: %d / Current Score: %d\n",newScore,currentScore);
-            printf("Moves Calculated: / %d Depth: %d\n", moves,depth);
-            printf("Starting Move: %d End Move: %d\n\n\n",start,end);
-            makeMove(&game,start,end);
-            printBoard(&game,start,end);
-        #endif
-        
-}*/
