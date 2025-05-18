@@ -1,12 +1,5 @@
 #define MAX_MOVES 256
 
-enum Color {
-    Black, White
-};
-enum Piece {
-    King, Pawn, Knight, Bishop, Rook, Queen
-};
-
 struct Move {
     int start;
     int end;
@@ -28,4 +21,4 @@ void generateMoves(struct gameBoard *game, struct MoveList *moves, enum Color co
 
 int gameOver(enum Color turn, struct gameBoard *game);
 
-int alphabeta(int originalDepth, int depth, struct gameBoard *game, enum Color turn, int alpha, int beta, int *moves, struct Move *move);
+int alphabeta(int depth, struct gameBoard *game, enum Color Turn, int alpha, int beta, struct MoveList *moves);

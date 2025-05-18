@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "Board.h"
+#include "Board2.h"
 #include <stdio.h>
 #include "AlphaBeta3.h"
 
@@ -60,6 +60,10 @@ int kingPst[] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
 };
+
+int max(int a, int b) {
+    return a > b ? a : b;
+}
 
 void printMoves(struct MoveList *moves) {
     printf("Moves: %d \n", moves->count);
@@ -854,11 +858,42 @@ int evaluate(struct gameBoard *game){
 
 int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color lost
 {
-    if (!inCheck(game, turn)) return 0;
-    printf("herer\n");
     struct MoveList l;
     generateMoves(game, &l, turn);
-    printf("%d\n",l.count);
-    if (l.count == 0) return 1;
-    return 0;
+    if (l.count > 0) {
+        return Play;
+    }
+    if (inCheck(game, turn)) return Checkmate;
+    return Stalemate;
+
+}
+//ASSUME ITS WHITE PLAYING AS MAXIMIZING
+
+int alphabeta(int depth, struct gameBoard *game, enum Color Turn, int alpha, int beta) {
+    if (depth == 0 || gameOver(Turn, game)) return evaluate(game);
+    long long int = TempPiece;
+    struct gameBoard newGame = &game;
+    int eval;
+    //Maximizing Player
+    if (Turn == White) {
+        int maxEval = -1000000;
+       
+        struct MoveList moves;
+        generateMoves(game, &moves, Turn);
+        struct Move move;
+
+        for (int i = 0; i < moves.count; ++i) {
+            move = moves.moves[moves.count];
+            if (move.piece = Pawn) {
+                checkCollision((1ULL << move.start), game, &newGame);
+                newGame.whitePawns -= (1ULL << move.start);
+                eval = alphabeta(depth-1, &newGame, Black, alpha, beta);
+                newGame.whitePawns = game->whitePawns;
+                maxEval = max(eval, maxEval);
+                alpha = max(alpha, eval);
+                if (beta <= alpha) break;
+            }
+        }
+        return maxEval;
+    }
 }

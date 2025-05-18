@@ -1,5 +1,16 @@
 #pragma once
 
+
+enum Color {
+    Black, White
+};
+enum Piece {
+    King, Pawn, Knight, Bishop, Rook, Queen
+};
+enum GameState {
+    Checkmate, Stalemate, Play
+};
+
 void setColour(const char *colour);
 
 struct gameBoard {
