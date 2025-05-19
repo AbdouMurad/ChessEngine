@@ -12,25 +12,7 @@ void setColour(const char *colour) {
   if (current == colour) return;
   printf("%s", colour);
   current = colour;
-}/*
-struct gameBoard {
-    long long unsigned int whitePawns;
-    long long unsigned int whiteBishops;
-    long long unsigned int whiteKnights;
-    long long unsigned int whiteRooks;
-    long long unsigned int whiteQueen;
-    long long unsigned int whiteKing;
-    int whiteCastle;
-    
-    long long unsigned int blackPawns;
-    long long unsigned int blackKnights;
-    long long unsigned int blackBishops;
-    long long unsigned int blackRooks;
-    long long unsigned int blackQueen;
-    long long unsigned int blackKing;
-    int blackCastle; //1 - left : 2 - right : 3 - both
-
-};*/
+}
 unsigned long long int blackBitBoard(struct gameBoard *game){//returns bit board of all opponent pieces
     return (*game).blackPawns | (*game).blackKnights | (*game).blackBishops | (*game).blackRooks | (*game).blackQueen | (*game).blackKing;
 }

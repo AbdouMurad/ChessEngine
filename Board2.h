@@ -3,43 +3,29 @@
 void setColour(const char *colour);
 
 enum Color {
-    Black, White
+    White, Black
 };
 enum Piece {
     King, Pawn, Knight, Bishop, Rook, Queen
 };
 enum GameState {
-    Checkmate, Stalemate, Play
+    Play, Stalemate, Checkmate
 };
-
 struct gameBoard {
-    
-    long long unsigned int whitePawns;
-    long long unsigned int whiteBishops;
-    long long unsigned int whiteKnights;
-    long long unsigned int whiteRooks;
-    long long unsigned int whiteQueen;
-    long long unsigned int whiteKing;
-    int whiteCastle;
-    
-    long long unsigned int blackPawns;
-    long long unsigned int blackKnights;
-    long long unsigned int blackBishops;
-    long long unsigned int blackRooks;
-    long long unsigned int blackQueen;
-    long long unsigned int blackKing;
-    int blackCastle; //1 - left : 2 - right : 3 - both
-
+    unsigned long long int game[2][6];
+    int moveCount;
 };
 
-unsigned long long int blackBitBoard(struct gameBoard *game);
+void setupBlankGame(struct gameBoard *Game);
 
-unsigned long long int whiteBitboard(struct gameBoard *game);
+void setupGame(struct gameBoard *Game);
 
-unsigned long long int allBitboard(struct gameBoard *game);
+unsigned long long int ColorBitBoard(struct gameBoard *Game, enum Color color);
 
-void checkCollision(long long unsigned int singlePiece, struct gameBoard *game,struct gameBoard *newGame);
+unsigned long long int AllBitBoard(struct gameBoard *Game);
 
-void printBoard(struct gameBoard *game, int start, int end);
+void CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,struct gameBoard *newGame);
 
-int makeMove(struct gameBoard *game, int start, int end);
+void PrintBoard(struct gameBoard *Game, int start, int end);
+
+int MakeMove(struct gameBoard *Game, int start, int end, enum Color color);
