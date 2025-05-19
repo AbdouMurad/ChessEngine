@@ -15,12 +15,12 @@ void moveInput(int *start, int *end){
 
 int main(){
     struct gameBoard Game;
-    //setupBlankGame(&Game);
-    setupGame(&Game);
+    setupBlankGame(&Game);
+    //setupGame(&Game);
     struct MoveList l;
-    generateMoves(&Game, &l, White);
-    //printMoves(&l);
-
+    generateMoves(&Game, &l, Black);
+    printMoves(&l);
+    printf("more Moves? : %d\n", MoreMoves(&Game, Black));
 
     struct Move move;
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);

@@ -20,6 +20,8 @@ void printMoves(struct MoveList *moves);
 
 void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color color);
 
+int MoreMoves(struct gameBoard *Game, enum Color color);
+
 int gameOver(enum Color turn, struct gameBoard *game, struct MoveList *moves);
 
 int alphabeta(int depth, struct gameBoard *game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *move);

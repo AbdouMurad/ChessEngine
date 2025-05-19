@@ -142,7 +142,7 @@ void setupBlankGame(struct gameBoard *Game)
     Game->game[White][Knight] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
-    0b00000000ULL << 40 |  // Row 3
+    0b01000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
@@ -164,8 +164,8 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b00100000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b01000000ULL;         // Row 8
+    0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
+    0b00000000ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1
@@ -190,8 +190,8 @@ void setupBlankGame(struct gameBoard *Game)
     // Black Pieces
 
     Game->game[Black][Pawn] =
-    0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
+    0b01000000ULL << 56 |  // Row 1
+    0b11000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5

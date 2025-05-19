@@ -76,9 +76,10 @@ void printMoves(struct MoveList *moves) {
     printf("\n");
 }
 
-void printKingMoves(struct MoveList *moves) {
+//for debug
+void printPieceMoves(struct MoveList *moves, enum Color piece) {
     for (int i = 0; i < moves->count; ++i) {
-        if (moves->moves[i].piece == King) printf("[%d : %d - %d]\n", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece);
+        if (moves->moves[i].piece == piece) printf("[%d : %d - %d]\n", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece);
     }
 }
 
@@ -95,7 +96,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 while (currentPiece){
                     position = __builtin_ctzll(currentPiece);
                     currentPiece &= currentPiece - 1;
-                    if (position/8 == 1 && !((1ULL << (position + 16)) & AllBitBoard(Game))) { //pawn move 2 forward
+                    if (position/8 == 1 && !(((1ULL << (position + 8)) | (1ULL << (position + 16))) & AllBitBoard(Game))) { //pawn move 2 forward
                         struct Move move = {position, position + 16, Pawn};
                         moves->moves[moves->count] = move;
                         moves->count += 1;
@@ -122,7 +123,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 while (currentPiece) {
                     position = __builtin_ctzll(currentPiece);
                     currentPiece &= currentPiece - 1;
-                    if (position/8 == 6 && !((1ULL << (position - 16)) & AllBitBoard(Game))) {
+                    if (position/8 == 6 && !(((1ULL << (position - 8)) | (1ULL << (position - 16))) & AllBitBoard(Game))) {
                         struct Move move = {position , position - 16, piece};
                         moves->moves[moves->count] = move;
                         moves->count += 1;
@@ -562,14 +563,363 @@ int evaluate(struct gameBoard *Game, enum Color turn, struct MoveList *moves){
     return score;
 }
 
+int MoreMoves(struct gameBoard *Game, enum Color color) {
+    int position = 0;
+    long long int currentPiece = 0;
+    long long int tempPiece = 0;
+    for (int Piece = Queen; Piece >= King; --Piece){
+        enum Piece piece = (enum Piece)Piece;
+        if (piece == Pawn) {
+            if (color == White) {
+                currentPiece = Game->game[color][Pawn];
+                while (currentPiece){
+                    position = __builtin_ctzll(currentPiece);
+                    currentPiece &= currentPiece - 1;
+                    if (position/8 == 1 && !(((1ULL << (position + 8)) | (1ULL << (position + 16))) & AllBitBoard(Game))) { //pawn move 2 forward
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position + 16) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 < 7 && !((1ULL << (position + 8)) & AllBitBoard(Game))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position + 8) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 < 7 && position % 8 > 0 && ((1ULL << (position + 9)) & ColorBitBoard(Game, !color))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position + 9) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 < 7 && position % 8 < 7 && ((1ULL << (position + 7)) & ColorBitBoard(Game, !color))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position + 7) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                }
+            }
+            else {
+                currentPiece = Game->game[color][Pawn];
+                while (currentPiece) {
+                    position = __builtin_ctzll(currentPiece);
+                    currentPiece &= currentPiece - 1;
+                    if (position/8 == 6 && !(((1ULL << (position - 8)) | (1ULL << (position - 16))) & AllBitBoard(Game))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] |= (1ULL << position - 16);
+                        Game->game[color][Pawn] ^= (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 > 0 && !((1ULL << (position - 8)) & AllBitBoard(Game))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position - 8) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 > 0 && position % 8 > 0 && ((1ULL << position - 9) & ColorBitBoard(Game, !color))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position - 9) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                    if (position/8 > 0 && position % 8 < 7 && ((1ULL << (position - 7) & ColorBitBoard(Game, !color)))) {
+                        tempPiece = Game->game[color][Pawn];
+                        Game->game[color][Pawn] += (1ULL << position - 7) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][Pawn] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][Pawn] = tempPiece;
+                    }
+                }
+            }
+        }
+        if (piece == Knight) {
+            currentPiece = Game->game[color][Knight];
+            while (currentPiece) {
+                position = __builtin_ctzll(currentPiece);
+                currentPiece &= currentPiece - 1;
+                if (position/8 < 7) {
+                    if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position + 6)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position + 6) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                    }
+                    if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position + 10)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position + 10) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                    }
+                    if (position/8 < 6) {
+                        if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 15)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position + 15) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                        }
+                        if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 17)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position + 17) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                        }
+                    }
+                }
+                if (position/8 > 0) {
+                    if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position - 10)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position - 10) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                    }
+                    if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position - 6)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position - 6) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                    }
+                    if (position/8 > 1) {
+                        if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 17)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position - 17) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                        }
+                        if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 15)))) {
+                        tempPiece = Game->game[color][piece];
+                        Game->game[color][piece] += (1ULL << position - 15) - (1ULL << position);
+                        if (!inCheck(Game, color)) {
+                            Game->game[color][piece] = tempPiece;
+                            return 1;
+                        }
+                        Game->game[color][piece] = tempPiece;
+                        }
+                    }
+                }
+            }
+        }
+        if (piece == Rook || piece == Queen) {
+            currentPiece = Game->game[color][Piece];
+            while (currentPiece) {
+                position = __builtin_ctzll(currentPiece);
+                currentPiece &= currentPiece - 1;
+                if (position/8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position + 8) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position/8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 8)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position - 8) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position - 1) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position/8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position + 1) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+            }
+        }
+        if (piece == Bishop || piece == Queen) {
+            currentPiece = Game->game[color][piece];
+            while (currentPiece) {
+                position = __builtin_ctzll(currentPiece);
+                currentPiece &= currentPiece - 1;
+                if (position/8 < 7 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position + 9) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position/8 < 7 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position + 7) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position/8 > 0 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position - 9) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+                if (position/8 > 0 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))){
+                    tempPiece = Game->game[color][piece];
+                    Game->game[color][piece] += (1ULL << position - 7) - (1ULL << position);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][piece] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][piece] = tempPiece;
+                }
+            }
+        }
+        if (piece == King) {
+            tempPiece = Game->game[color][King];
+            position = __builtin_ctzll(tempPiece);
+            if (tempPiece == 0) {
+                printf("ERROR - NO KING %d\n", position);
+                continue;
+            }
+            if (position/8 < 7) {
+                if (!(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
+                    Game->game[color][King] = 1ULL << (position + 8);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+                if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))) {
+                    Game->game[color][King] = 1ULL << (position + 7);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+                if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))) {
+                    Game->game[color][King] = 1ULL << (position + 9);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+            }
+            if (position/8 > 0) {
+                if (!(ColorBitBoard(Game, color) & (1ULL << (position - 8)))) {
+                    Game->game[color][King] = 1ULL << (position - 8);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+                if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))) {
+                    Game->game[color][King] = 1ULL << (position - 9);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+                if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))) {
+                    Game->game[color][King] = 1ULL << (position - 7);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+                }
+            }
+            if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))) {
+                    Game->game[color][King] = 1ULL << (position - 1);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+            }
+            if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))) {
+                    Game->game[color][King] = 1ULL << (position + 1);
+                    if (!inCheck(Game, color)) {
+                        Game->game[color][King] = tempPiece;
+                        return 1;
+                    }
+                    Game->game[color][King] = tempPiece;
+            }
+        }
+    }
+    return 0;
+}
+
+
 int gameOver (enum Color turn, struct gameBoard *game, struct MoveList *moves) //check if "turn" color lost
 {
     if (moves->count > 0) return Play;
     if (inCheck(game, turn)) return Checkmate;
     return Stalemate;
 }
-//ASSUME ITS WHITE PLAYING AS MAXIMIZING
 
+//ASSUME ITS WHITE PLAYING AS MAXIMIZING
 int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move) {
     struct MoveList moves;
     generateMoves(Game, &moves, Turn);
