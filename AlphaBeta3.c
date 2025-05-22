@@ -92,12 +92,12 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
         enum Piece piece = (enum Piece)Piece;
         if (piece == Pawn) {
             if (color == White) {
-                currentPiece = Game->game[color][Pawn];
+                currentPiece = Game->game[color][piece];
                 while (currentPiece){
                     position = __builtin_ctzll(currentPiece);
                     currentPiece &= currentPiece - 1;
                     if (position/8 == 1 && !(((1ULL << (position + 8)) | (1ULL << (position + 16))) & AllBitBoard(Game))) { //pawn move 2 forward
-                        struct Move move = {position, position + 16, Pawn};
+                        struct Move move = {position, position + 16, piece};
                         moves->moves[moves->count] = move;
                         moves->count += 1;
                     }
@@ -567,93 +567,114 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
     int position = 0;
     long long int currentPiece = 0;
     long long int tempPiece = 0;
+    struct gameBoard copyGame = *Game;
+    int reset = 0;
     for (int Piece = Queen; Piece >= King; --Piece){
         enum Piece piece = (enum Piece)Piece;
         if (piece == Pawn) {
             if (color == White) {
-                currentPiece = Game->game[color][Pawn];
+                currentPiece = Game->game[color][piece];
                 while (currentPiece){
                     position = __builtin_ctzll(currentPiece);
                     currentPiece &= currentPiece - 1;
                     if (position/8 == 1 && !(((1ULL << (position + 8)) | (1ULL << (position + 16))) & AllBitBoard(Game))) { //pawn move 2 forward
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position + 16) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position + 16) - (1ULL << position);
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        copyGame.game[color][piece] = tempPiece;
                     }
                     if (position/8 < 7 && !((1ULL << (position + 8)) & AllBitBoard(Game))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position + 8) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position + 8) - (1ULL << position);
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        copyGame.game[color][piece] = tempPiece;
                     }
                     if (position/8 < 7 && position % 8 > 0 && ((1ULL << (position + 9)) & ColorBitBoard(Game, !color))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position + 9) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position + 9) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position + 9), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][piece] = tempPiece;
+                        }
                     }
                     if (position/8 < 7 && position % 8 < 7 && ((1ULL << (position + 7)) & ColorBitBoard(Game, !color))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position + 7) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position + 7) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position + 7), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][piece] = tempPiece;
+                        }
                     }
                 }
             }
             else {
-                currentPiece = Game->game[color][Pawn];
+                currentPiece = Game->game[color][piece];
                 while (currentPiece) {
                     position = __builtin_ctzll(currentPiece);
                     currentPiece &= currentPiece - 1;
                     if (position/8 == 6 && !(((1ULL << (position - 8)) | (1ULL << (position - 16))) & AllBitBoard(Game))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] |= (1ULL << position - 16);
-                        Game->game[color][Pawn] ^= (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position - 16) - (1ULL << position);
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        copyGame.game[color][piece] = tempPiece;
                     }
                     if (position/8 > 0 && !((1ULL << (position - 8)) & AllBitBoard(Game))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position - 8) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position - 8) - (1ULL << position);
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        copyGame.game[color][piece] = tempPiece;
                     }
                     if (position/8 > 0 && position % 8 > 0 && ((1ULL << position - 9) & ColorBitBoard(Game, !color))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position - 9) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position - 9) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position - 9), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][piece] = tempPiece;
+                        }
                     }
                     if (position/8 > 0 && position % 8 < 7 && ((1ULL << (position - 7) & ColorBitBoard(Game, !color)))) {
-                        tempPiece = Game->game[color][Pawn];
-                        Game->game[color][Pawn] += (1ULL << position - 7) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][Pawn] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position - 7) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position - 7), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][Pawn] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][piece] = tempPiece;
+                        }
                     }
                 }
             }
@@ -665,246 +686,266 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                 currentPiece &= currentPiece - 1;
                 if (position/8 < 7) {
                     if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position + 6)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position + 6) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
+                        tempPiece = Game->game[color][Knight];
+                        copyGame.game[color][piece] += (1ULL << position + 6) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position + 6), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][piece] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][Knight] = tempPiece;
+                        }
                     }
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position + 10)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position + 10) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
+                        tempPiece = Game->game[color][Knight];
+                        copyGame.game[color][piece] += (1ULL << position + 10) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position + 10), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][piece] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][Knight] = tempPiece;
+                        }
                     }
                     if (position/8 < 6) {
                         if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 15)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position + 15) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
-                            return 1;
-                        }
-                        Game->game[color][piece] = tempPiece;
+                            tempPiece = Game->game[color][Knight];
+                            copyGame.game[color][piece] += (1ULL << position + 15) - (1ULL << position);
+                            if (CheckCollision(1ULL << (position + 15), Game, &copyGame)) reset = 1;
+                            if (!inCheck(&copyGame, color)) {
+                                return 1;
+                            }
+                            if (reset) {
+                                copyGame = *Game;
+                                reset = 0;
+                            }
+                            else {
+                                copyGame.game[color][Knight] = tempPiece;
+                            }
                         }
                         if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 17)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position + 17) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
-                            return 1;
-                        }
-                        Game->game[color][piece] = tempPiece;
+                            tempPiece = Game->game[color][Knight];
+                            copyGame.game[color][piece] += (1ULL << position + 17) - (1ULL << position);
+                            if (CheckCollision(1ULL << (position + 17), Game, &copyGame)) reset = 1;
+                            if (!inCheck(&copyGame, color)) {
+                                return 1;
+                            }
+                            if (reset) {
+                                copyGame = *Game;
+                                reset = 0;
+                            }
+                            else {
+                                copyGame.game[color][Knight] = tempPiece;
+                            }
                         }
                     }
                 }
                 if (position/8 > 0) {
                     if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position - 10)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position - 10) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
+                        tempPiece = Game->game[color][Knight];
+                        copyGame.game[color][piece] += (1ULL << position - 10) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position - 10), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][piece] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][Knight] = tempPiece;
+                        }
                     }
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position - 6)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position - 6) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
+                        tempPiece = Game->game[color][Knight];
+                        copyGame.game[color][piece] += (1ULL << position - 6) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position - 6), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
-                        Game->game[color][piece] = tempPiece;
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][Knight] = tempPiece;
+                        }
                     }
                     if (position/8 > 1) {
                         if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 17)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position - 17) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
-                            return 1;
-                        }
-                        Game->game[color][piece] = tempPiece;
+                            tempPiece = Game->game[color][Knight];
+                            copyGame.game[color][piece] += (1ULL << position - 17) - (1ULL << position);
+                            if (CheckCollision(1ULL << (position - 17), Game, &copyGame)) reset = 1;
+                            if (!inCheck(&copyGame, color)) {
+                                return 1;
+                            }
+                            if (reset) {
+                                copyGame = *Game;
+                                reset = 0;
+                            }
+                            else {
+                                copyGame.game[color][Knight] = tempPiece;
+                            }
                         }
                         if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 15)))) {
-                        tempPiece = Game->game[color][piece];
-                        Game->game[color][piece] += (1ULL << position - 15) - (1ULL << position);
-                        if (!inCheck(Game, color)) {
-                            Game->game[color][piece] = tempPiece;
-                            return 1;
-                        }
-                        Game->game[color][piece] = tempPiece;
+                            tempPiece = Game->game[color][Knight];
+                            copyGame.game[color][piece] += (1ULL << position - 15) - (1ULL << position);
+                            if (CheckCollision(1ULL << (position - 15), Game, &copyGame)) reset = 1;
+                            if (!inCheck(&copyGame, color)) {
+                                return 1;
+                            }
+                            if (reset) {
+                                copyGame = *Game;
+                                reset = 0;
+                            }
+                            else {
+                                copyGame.game[color][Knight] = tempPiece;
+                            }
                         }
                     }
                 }
             }
         }
-        if (piece == Rook || piece == Queen) {
+        if (piece == Rook || piece == Queen || piece == King) {
             currentPiece = Game->game[color][Piece];
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
                 currentPiece &= currentPiece - 1;
                 if (position/8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
-                    tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position + 8) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][piece] = tempPiece;
+                        tempPiece = Game->game[color][piece];
+                        copyGame.game[color][piece] += (1ULL << position + 8) - (1ULL << position);
+                        if (CheckCollision(1ULL << (position + 8), Game, &copyGame)) reset = 1;
+                        if (!inCheck(&copyGame, color)) {
+                            return 1;
+                        }
+                        if (reset) {
+                            copyGame = *Game;
+                            reset = 0;
+                        }
+                        else {
+                            copyGame.game[color][piece] = tempPiece;
+                        }
                 }
                 if (position/8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 8)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position - 8) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position - 8) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position - 8), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
                 if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position - 1) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position - 1) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position - 1), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
                 if (position/8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position + 1) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position + 1) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position + 1), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
             }
         }
-        if (piece == Bishop || piece == Queen) {
+        if (piece == Bishop || piece == Queen || piece == King) {
             currentPiece = Game->game[color][piece];
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
                 currentPiece &= currentPiece - 1;
                 if (position/8 < 7 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position + 9) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position + 9) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position + 9), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
                 if (position/8 < 7 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position + 7) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position + 7) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position + 7), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
                 if (position/8 > 0 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position - 9) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position - 9) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position - 9), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
                 if (position/8 > 0 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))){
                     tempPiece = Game->game[color][piece];
-                    Game->game[color][piece] += (1ULL << position - 7) - (1ULL << position);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][piece] = tempPiece;
+                    copyGame.game[color][piece] += (1ULL << position - 7) - (1ULL << position);
+                    if (CheckCollision(1ULL << (position - 7), Game, &copyGame)) reset = 1;
+                    if (!inCheck(&copyGame, color)) {
                         return 1;
                     }
-                    Game->game[color][piece] = tempPiece;
+                    if (reset) {
+                        copyGame = *Game;
+                        reset = 0;
+                    }
+                    else {
+                        copyGame.game[color][piece] = tempPiece;
+                    }
                 }
-            }
-        }
-        if (piece == King) {
-            tempPiece = Game->game[color][King];
-            position = __builtin_ctzll(tempPiece);
-            if (tempPiece == 0) {
-                printf("ERROR - NO KING %d\n", position);
-                continue;
-            }
-            if (position/8 < 7) {
-                if (!(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
-                    Game->game[color][King] = 1ULL << (position + 8);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-                if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))) {
-                    Game->game[color][King] = 1ULL << (position + 7);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-                if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))) {
-                    Game->game[color][King] = 1ULL << (position + 9);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-            }
-            if (position/8 > 0) {
-                if (!(ColorBitBoard(Game, color) & (1ULL << (position - 8)))) {
-                    Game->game[color][King] = 1ULL << (position - 8);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-                if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))) {
-                    Game->game[color][King] = 1ULL << (position - 9);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-                if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))) {
-                    Game->game[color][King] = 1ULL << (position - 7);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-                }
-            }
-            if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))) {
-                    Game->game[color][King] = 1ULL << (position - 1);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
-            }
-            if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))) {
-                    Game->game[color][King] = 1ULL << (position + 1);
-                    if (!inCheck(Game, color)) {
-                        Game->game[color][King] = tempPiece;
-                        return 1;
-                    }
-                    Game->game[color][King] = tempPiece;
             }
         }
     }

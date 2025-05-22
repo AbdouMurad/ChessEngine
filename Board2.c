@@ -151,7 +151,7 @@ void setupBlankGame(struct gameBoard *Game)
     Game->game[White][Bishop] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
-    0b00000000ULL << 40 |  // Row 3
+    0b00100000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
@@ -191,7 +191,7 @@ void setupBlankGame(struct gameBoard *Game)
 
     Game->game[Black][Pawn] =
     0b01000000ULL << 56 |  // Row 1
-    0b11000000ULL << 48 |  // Row 2
+    0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
@@ -218,7 +218,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL;         // Row 8
     Game->game[Black][Rook] =
     0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
+    0b11000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
@@ -261,14 +261,16 @@ unsigned long long int AllBitBoard(struct gameBoard *Game) {
   return ColorBitBoard(Game, White) | ColorBitBoard(Game, Black);
 }
 
-void CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  struct gameBoard *newGame) {
+int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  struct gameBoard *newGame) {
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 6; ++j) {
       if (singlePiece & Game->game[i][j]) {
         newGame->game[i][j] ^= singlePiece;
+        return 1;
       }
     }
   }
+  return 0;
 }
 
 void PrintBoard(struct gameBoard *Game, int start, int end) {
