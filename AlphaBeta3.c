@@ -474,13 +474,13 @@ int inCheck(struct gameBoard *Game, enum Color turn) //check if "turn" color is 
     return 0;    
 }
 
-int evaluate(struct gameBoard *Game, enum Color turn, struct MoveList *moves){
-    int x = gameOver(turn, Game, moves);
+int evaluate(struct gameBoard *Game, enum Color turn){
+    /*int x = gameOver(turn, Game);
     if (x == Stalemate) return 0;
     if (x == Checkmate) {
         if (turn == White) return -10000000;
         else return 10000000;
-    }
+    }*/
     
     int score = 0;
     int coord;
@@ -953,21 +953,29 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
 }
 
 
-int gameOver (enum Color turn, struct gameBoard *game, struct MoveList *moves) //check if "turn" color lost
+int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color lost
 {
-    if (moves->count > 0) return Play;
+    if (MoreMoves(game, turn)) return Play;
     if (inCheck(game, turn)) return Checkmate;
     return Stalemate;
 }
 
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
 int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move) {
-    struct MoveList moves;
-    generateMoves(Game, &moves, Turn);
-    if (depth == 0 || gameOver(Turn, Game, &moves)) return evaluate(Game, Turn, &moves);
+    int x = gameOver(Turn, Game);
+    if (x == Stalemate) return 0;
+    else if (x == Checkmate) {
+        if (Turn == White) return -10000000;
+        else return 10000000;
+    }
+    if (depth == 0) return evaluate(Game, Turn);
+    
     long long int TempPiece;
     int eval;
-    //printKingMoves(&moves);
+
+    struct MoveList moves;
+    generateMoves(Game, &moves, Turn);
+
     //Maximizing Player
     if (maximizingPlayer) {
         int maxEval = -10000000;

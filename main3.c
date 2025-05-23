@@ -1,28 +1,44 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "Board2.h"
 #include "AlphaBeta3.h"
 
-void moveInput(int *start, int *end){
+void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     printf("Which piece to move?\n");
-    scanf("%d",start);
+    scanf("%d",&(Input->start));
     printf("Where to?\n");
-    scanf("%d",end);
+    scanf("%d", &(Input->end));
+    for (int i = 0; i < 6; ++i) {
+        if ((1ULL << Input->start) & Game->game[turn][i]) Input->piece = i;
+    }
+}
+void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
+    CheckCollision(1ULL << Input->start, Game, Game);
+    CheckCollision(1ULL << Input->end, Game, Game);
+    Game->game[turn][Input->piece] += (1ULL << Input->end);
 }
 
-//time to beat: 1.798 
+//time to beat: user - 0.967 
 
 int main(){
     struct gameBoard Game;
-    setupBlankGame(&Game);
-    //setupGame(&Game);
-    struct MoveList l;
-    generateMoves(&Game, &l, Black);
-    printMoves(&l);
-    printf("more Moves? : %d\n", MoreMoves(&Game, Black));
-
+    //setupBlankGame(&Game);
+    setupGame(&Game);
+    
     struct Move move;
+    struct Move Input;
+    while (!gameOver(White, &Game) && !gameOver(Black, &Game)) {
+        PrintBoard(&Game, -1, -1);
+        int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
+        printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
+        makeMove(&Game, &move, White);
+        PrintBoard(&Game, move.start, move.end);
+
+        moveInput(&Game, &Input, Black);
+        makeMove(&Game, &Input, Black);
+        PrintBoard(&Game, Input.start, Input.end);
+    }
+    return 0;
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
     printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
     PrintBoard(&Game, move.start, move.end);
