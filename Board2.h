@@ -11,9 +11,15 @@ enum Piece {
 enum GameState {
     Play, Stalemate, Checkmate
 };
+
+enum Castle {
+    WhiteBoth, WhiteQueen, WhiteKing, BlackBoth, BlackQueen, BlackKing, Neither
+};
 struct gameBoard {
     unsigned long long int game[2][6];
     int moveCount;
+    enum Castle WhiteCastle;
+    enum Castle BlackCastle;
 };
 
 void setupBlankGame(struct gameBoard *Game);

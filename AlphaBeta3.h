@@ -5,6 +5,7 @@ struct Move {
     int start;
     int end;
     enum Piece piece;
+    enum Piece promotion; //when promotion occurs this occurs what the new move is
 };
 
 struct MoveList {
@@ -12,7 +13,9 @@ struct MoveList {
     int count;
 };
 
-int inCheck(struct gameBoard *game, enum Color col);
+int inCheck(struct gameBoard *game, enum Color col); // check if color is in check
+
+int isSquareAttacked(int position, struct gameBoard *game, enum Color col); //check if square for color is being attacked
 
 int evaluate(struct gameBoard *Game, enum Color turn);
 
