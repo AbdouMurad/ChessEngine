@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "board.h": "c",
+        "bitset": "c",
+        "chrono": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}
