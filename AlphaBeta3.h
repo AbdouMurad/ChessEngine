@@ -6,12 +6,14 @@ struct Move {
     int end;
     enum Piece piece;
     enum Piece promotion; //when promotion occurs this occurs what the new move is
+    int score; //score used to evaluate the move in order to prioritize better moves
 };
 
 struct MoveList {
     struct Move moves[MAX_MOVES];
     int count;
 };
+void InsertSort(struct Move *moves, int count);
 
 int inCheck(struct gameBoard *game, enum Color col); // check if color is in check
 

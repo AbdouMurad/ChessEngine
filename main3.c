@@ -32,7 +32,7 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
     }
 }
 
-//time to beat: user - 0.967 
+//time to beat: user - 1.003 
 
 int main(){
     struct gameBoard Game;
@@ -42,13 +42,15 @@ int main(){
     struct Move move;
     struct Move Input;
     struct MoveList moves;
-    //PrintBoard(&Game, -1, -1);
-    //generateMoves(&Game, &moves, White);
-    //printMoves(&moves);
+    printf("MORE MOVES? %d\n", gameOver(Black, &Game));
+    PrintBoard(&Game, -1, -1);
+    generateMoves(&Game, &moves, White);
+
     
 
 
-    //return 0;
+    return 0;
+    /*
     while (!gameOver(White, &Game) && !gameOver(Black, &Game)) {
         PrintBoard(&Game, -1, -1);
         int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
@@ -60,7 +62,7 @@ int main(){
         makeMove(&Game, &Input, Black);
         PrintBoard(&Game, Input.start, Input.end);
     }
-    return 0;
+    return 0;*/
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
     printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
     PrintBoard(&Game, move.start, move.end);
