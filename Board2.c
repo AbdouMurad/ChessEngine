@@ -170,7 +170,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b01000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b10000000ULL;         // Row 8
+    0b00100000ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1

@@ -613,7 +613,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     newGame = *Game;
             }
             //castle
-            if (!inCheck(Game, color) && (position == 3 + color * 57)) {
+            if (!inCheck(Game, color) && ((color == White && Game->WhiteCastle != Neither) || (color == Black && Game->BlackCastle != Neither))) {
                 if (color == White && Game->WhiteCastle != Neither) {
                     //check left castle
                     if (Game->WhiteCastle == WhiteBoth || Game->WhiteCastle == WhiteQueen) {
@@ -1300,6 +1300,7 @@ int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color l
 
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
 int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move) {
+
     int x = gameOver(Turn, Game);
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
