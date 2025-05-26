@@ -1305,8 +1305,8 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     int x = gameOver(Turn, Game);
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
-        if (Turn == White) return -10000000;
-        else return 10000000;
+        if (Turn == White) return -10000000 + depth;
+        else return 10000000 - depth;
     }
     if (depth == 0) return evaluate(Game, Turn);
     

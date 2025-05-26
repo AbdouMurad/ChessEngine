@@ -112,7 +112,7 @@ int main(){
     struct Move move;
     struct Move Input;
     
-    while (!gameOver(White, &Game) && !gameOver(Black, &Game)) {
+    while (gameOver(White, &Game) == Play && gameOver(Black, &Game) == Play) {
         PrintBoard(&Game, -1, -1);
 
         int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
@@ -124,7 +124,9 @@ int main(){
         makeMove(&Game, &Input, Black);
         PrintBoard(&Game, Input.start, Input.end);
     }
-    
+    if (gameOver(White, &Game) == Stalemate) printf("DRAW - Stalemate\n");
+    if (gameOver(White, &Game) == CheckMAte) printf("Black Win\n");
+    else printf("White Win\n");
     return 0;
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
     printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
