@@ -13,6 +13,8 @@ struct MoveList {
     struct Move moves[MAX_MOVES];
     int count;
 };
+int abs(int a);
+
 void InsertSort(struct Move *moves, int count);
 
 int inCheck(struct gameBoard *game, enum Color col); // check if color is in check

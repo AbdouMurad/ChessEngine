@@ -96,22 +96,24 @@ void printMoves(struct MoveList *moves) {
     printf("Moves: %d \n", moves->count);
     for (int i = 0; i < moves->count; ++i) {
         if (i % 10 == 0) printf("\n");
-            printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
-            if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
-            else printf("] ");
+        printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
+        if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
+        else printf("] ");
     }
     printf("\n");
 }
 
 //for debug - broken
-void printPieceMoves(struct MoveList *moves, enum Color piece) {
+void printPieceMoves(struct MoveList *moves, enum Piece piece) {
+    printf("Moves: %d \n", moves->count);
     for (int i = 0; i < moves->count; ++i) {
-        if (moves->moves[i].piece == piece) {
-            printf("[%d : %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece);
-            if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d]\n", moves->moves[i].promotion);
-            else printf("]\n");
-        }
+        if (i % 10 == 0) printf("\n");
+        if (moves->moves[i].piece != piece) continue;
+        printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
+        if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
+        else printf("] ");
     }
+    printf("\n");
 }
 
 void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color color) {
@@ -485,7 +487,6 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             tempPiece = Game->game[color][King];
             position = __builtin_ctzll(tempPiece);
             if (tempPiece == 0) {
-                printf("ERROR - NO KING\n");
                 continue;
             }
             if (position/8 < 7) {
@@ -614,15 +615,15 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             }
             //castle
             if (!inCheck(Game, color) && ((color == White && Game->WhiteCastle != Neither) || (color == Black && Game->BlackCastle != Neither))) {
-                if (color == White && Game->WhiteCastle != Neither) {
+                if (color == White) {
                     //check left castle
                     if (Game->WhiteCastle == WhiteBoth || Game->WhiteCastle == WhiteQueen) {
                         tempPiece = (1ULL << 4) | (1ULL << 5) | (1ULL << 6);
                         if (!(tempPiece & AllBitBoard(Game)) && !(isSquareAttacked(4, Game, White) || isSquareAttacked(5, Game, White))) {
                             struct Move move = {3, 5, King};
                             move.score = 100;
-                            newGame.game[color][piece] ^= 1ULL << position;
-                            newGame.game[color][piece] |= 1ULL << (position + 2);
+                            newGame.game[color][piece] ^= 1ULL << 3;
+                            newGame.game[color][piece] |= 1ULL << 5;
                             newGame.game[color][Rook] ^= 1ULL << 7;
                             newGame.game[color][Rook] |= 1ULL << 4;
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
@@ -650,7 +651,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         }
                     }
                 }
-                else if (color == Black && Game->BlackCastle != Neither) {
+                else if (color == Black) {
                     //check left castle
                     if (Game->BlackCastle == BlackBoth || Game->BlackCastle == BlackQueen) {
                         tempPiece = (1ULL << 62) | (1ULL << 61) | (1ULL << 60);
@@ -1315,7 +1316,8 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     struct MoveList moves;
     generateMoves(Game, &moves, Turn);
     InsertSort(moves.moves, moves.count);
-
+    //if (depth == DEPTH) printMoves(&moves); // Debug
+    
     //Maximizing Player
     if (maximizingPlayer) {
         int maxEval = -10000000;
@@ -1336,7 +1338,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == King && abs(move.start - move.end) == 2) {
                 if (Turn == White) {
                     newGame.WhiteCastle = Neither;
-                    if (move.end = 5) {
+                    if (move.end == 5) {
                         newGame.game[White][Rook] ^= (1ULL << 7);
                         newGame.game[White][Rook] |= (1ULL << 4);
                     }
