@@ -106,9 +106,8 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
 
 int main(){
     struct gameBoard Game;
-    //setupBlankGame(&Game);
-    setupGame(&Game);
-    
+    setupBlankGame(&Game);
+    //setupGame(&Game);
     struct Move move;
     struct Move Input;
     
@@ -125,9 +124,10 @@ int main(){
         PrintBoard(&Game, Input.start, Input.end);
     }
     if (gameOver(White, &Game) == Stalemate) printf("DRAW - Stalemate\n");
-    if (gameOver(White, &Game) == CheckMAte) printf("Black Win\n");
+    if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
     else printf("White Win\n");
     return 0;
+    
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move);
     printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
     PrintBoard(&Game, move.start, move.end);
