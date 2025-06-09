@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "Board2.h"
-#include "AlphaBeta3.h"
+#include "Board.h"
+#include "AlphaBeta.h"
 
 void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     struct MoveList moves;

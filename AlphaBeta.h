@@ -1,5 +1,5 @@
 #define MAX_MOVES 128
-#define DEPTH 9
+#define DEPTH 7
 
 struct Move {
     int start;
