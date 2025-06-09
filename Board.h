@@ -1,4 +1,5 @@
-#pragma once
+#pragma oncels
+
 
 void setColour(const char *colour);
 
@@ -21,6 +22,8 @@ struct gameBoard {
     enum Castle WhiteCastle;
     enum Castle BlackCastle;
 };
+
+
 
 void setupBlankGame(struct gameBoard *Game);
 

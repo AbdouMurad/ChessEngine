@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "AlphaBeta.h"
 
-long long unsigned int zobristTable[2][6][64] = {
+const long long unsigned int zobristTable[2][6][64] = {
     {
         {    0x44705db41c61fbdd,     0xf1f43c0f9d4ac921,     0xd8ea350244679cee,     0x4aea58f17f3fa831,
     0x1a5499fe88ab49bd,     0xa8d16df2b5db4b53,     0x102f6ad2cc6e8b64,     0xbf619f9f28d99e70,
@@ -201,6 +201,14 @@ long long unsigned int zobristTable[2][6][64] = {
     0xc7256ba02b0fa2d3,     0xa1a6167fbb36b579,     0xf46a693d28d72715,     0xf49bfc231504e3dc,}
     }
 };
+const long long unsigned int blackHash = 14721544785632194438ULL;
+const long long unsigned int castleHash[4] = {
+    0xA3B1C2D3E4F50617ULL,  // White kingside
+    0x8F92A1B0C3D4E5F6ULL,  // White queenside
+    0x123456789ABCDEF0ULL,  // Black kingside
+    0xFEDCBA9876543210ULL   // Black queenside
+};
+
 
 int pieceValue[] = {1000000,100,300,300,500,800};
 int pawnPst[] = {
@@ -269,6 +277,58 @@ int abs(int a) {
     return a > 0 ? a : -1 * a;
 }
 
+
+
+struct TTEntry *probe(long long unsigned int key, struct TTEntry *table) {
+    int hash = key % TT_SIZE;
+    struct TTEntry *entry = &table[hash];
+    if (entry->key == key) return entry;
+    return NULL;
+}
+
+void store(long long unsigned int key, int depth, int score, int flag, struct Move BestMove, struct TTEntry *table) {
+    int index = key % TT_SIZE;
+    struct TTEntry *entry = &table[index];
+    if (entry->depth < depth || entry->key == 0) {
+        entry->depth = depth;
+        entry->score = score;
+        entry->flag = flag;
+        entry->key = key;
+        entry->BestMove = BestMove;
+    }
+}
+
+long long unsigned int computeHash(struct gameBoard *Game, enum Color Turn) {
+    long long unsigned int result = 0b0;
+    long long unsigned int current;
+    int pos = 0;
+    if (Turn) result = blackHash;
+    for (int col = 0; col <= 1; ++col) {
+        for (int piece = 0; piece <= 5; ++piece) {
+            current = Game->game[col][piece];
+            while (current) {
+                pos = __builtin_ctzl(current);
+                result ^= zobristTable[col][piece][pos];
+                current &= current - 1;
+            }
+        }
+    }
+    if (Game->BlackCastle == BlackBoth) {
+        result ^= castleHash[2];
+        result ^= castleHash[3];
+    }
+    else if (Game->BlackCastle == BlackKing) result ^= castleHash[2];
+    else if (Game->BlackCastle == BlackQueen) result ^= castleHash[3];
+    
+    if (Game->WhiteCastle == WhiteBoth) {
+        result ^= castleHash[0];
+        result ^= castleHash[1];
+    }
+    else if (Game->WhiteCastle == WhiteKing) result ^= castleHash[0];
+    else if (Game->WhiteCastle == WhiteQueen) result ^= castleHash[1];
+    
+    return result;
+}
 
 void InsertSort(struct Move *moves, int count) {
     if (count < 2) return;
@@ -1484,8 +1544,10 @@ int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color l
     return Stalemate;
 }
 
+
+
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
-int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, int *nodes) {
+int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, int *nodes) {
     *nodes += 1;
     int x = gameOver(Turn, Game);
     if (x == Stalemate) return 0;
@@ -1494,10 +1556,27 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
         else return 10000000 - depth;
     }
     if (depth == 0) return evaluate(Game, Turn);
-    
+    //probe the hash
+    unsigned long long int hash = computeHash(Game, Turn);
+    struct TTEntry *entry = probe(hash, table);
+    if (entry && entry->depth >= depth) {
+        if (entry->flag == EXACT) {
+            if (depth == DEPTH) *Move = entry->BestMove;
+            return entry->score;
+        }
+        if (entry->flag == LOWERBOUND && entry->score >= beta) {
+            if (depth == DEPTH) *Move = entry->BestMove;
+            return entry->score;
+        }
+        if (entry->flag == HIGHERBOUND && entry->score <= alpha) {
+                if (depth == DEPTH) *Move = entry->BestMove;
+            return entry->score;
+        }
+    }
+    struct Move BestMove;
     long long int TempPiece;
     int eval;
-
+    int originalAlpha = alpha, originalBeta = beta;
     struct MoveList moves;
     generateMoves(Game, &moves, Turn);
     InsertSort(moves.moves, moves.count);
@@ -1571,14 +1650,24 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
                 } 
             }
 
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, nodes);
+            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, nodes);
+
             if (eval > maxEval) {
                 maxEval = eval;
+                BestMove = move;
                 if (depth == DEPTH) *Move = move;
             }
             alpha = max(alpha, eval);
             if (beta <= alpha) break;
         }
+        int flag;
+        if (maxEval <= originalAlpha) flag = HIGHERBOUND;
+        else if (maxEval >= originalBeta) flag = LOWERBOUND;
+        else flag = EXACT;
+        store(hash, depth, maxEval, flag, BestMove, table);
+
+
+
         return maxEval;
     }
     else {
@@ -1587,7 +1676,6 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
         for (int i = 0; i < moves.count; ++i){
             struct gameBoard newGame = *Game;
             move = moves.moves[i];
-            if (move.start == 44 && move.end == 8 && depth == 8) printf("Explored at %d\n", depth);
             CheckCollision((1ULL << move.end), Game, &newGame);
             newGame.game[Turn][move.piece] ^= (1ULL << move.start);
             newGame.game[Turn][move.piece] |= (1ULL << move.end);
@@ -1648,14 +1736,24 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
                     }
                 } 
             }
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, nodes);
+            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, nodes);
             if (eval < minEval) {
                 minEval = eval;
+                BestMove = move;
                 if (depth == DEPTH) *Move = move;
             }
             beta = min(beta, eval);
-            if (beta <= alpha) break;
+            if (beta <= alpha) 
+            {
+                break;
+            }
         }
+
+        int flag;
+        if (minEval <= originalAlpha) flag = HIGHERBOUND;
+        else if (minEval >= originalBeta) flag = LOWERBOUND;
+        else flag = EXACT;
+        store(hash, depth, minEval, flag, BestMove, table);
         return minEval;
     }
 }

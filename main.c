@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "Board.h"
 #include "AlphaBeta.h"
 
@@ -112,25 +113,34 @@ int main(){
     struct Move move;
     struct Move Input;
     
+    //initialize tt table
+    struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
+    int nodes = 0;
+    /*
     while (gameOver(White, &Game) == Play && gameOver(Black, &Game) == Play) {
         PrintBoard(&Game, -1, -1);
-        int nodes = 0;
-        int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, &nodes);
+        
+        int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
+        PrintBoard(&Game, -1, -1);
         printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, nodes);
         makeMove(&Game, &move, White);
         PrintBoard(&Game, move.start, move.end);
-
         moveInput(&Game, &Input, Black);
         makeMove(&Game, &Input, Black);
         PrintBoard(&Game, Input.start, Input.end);
     }
+
+
+
     if (gameOver(White, &Game) == Stalemate) printf("DRAW - Stalemate\n");
     if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
     else printf("White Win\n");
+    
+    free(ttTable);
     return 0;
-    /*
-    int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move,);
-    printf("Start: %d End: %d Piece: %d maxEval: %d\n",move.start,move.end,move.piece, eval);
-    PrintBoard(&Game, move.start, move.end);*/
+    */
+    int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
+    printf("Start: %d End: %d Piece: %d maxEval: %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, nodes);
+    PrintBoard(&Game, move.start, move.end);
 
 }
