@@ -9,6 +9,8 @@ const char * current = WHITE;
 
 void setupGame(struct gameBoard *Game)
 {
+    Game->enPassant[White] = 8;
+    Game->enPassant[Black] = 8;
     // White Pieces
     Game->game[White][Pawn] =
     0b00000000ULL << 56 |  // Row 1
@@ -132,17 +134,19 @@ void setupGame(struct gameBoard *Game)
 
 void setupBlankGame(struct gameBoard *Game)
 {
-    Game->WhiteCastle = WhiteBoth;
-    Game->BlackCastle = BlackBoth;
+    Game->WhiteCastle = Neither;
+    Game->BlackCastle = Neither;
+    Game->enPassant[White] = 8;
+    Game->enPassant[Black] = 8;
     // White Pieces
     Game->game[White][Pawn] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
-    0b00010000ULL << 24 |  // Row 5
-    0b00000001ULL << 16 |  // Row 6
-    0b11100110ULL << 8  |  // Row 7
+    0b00000001ULL << 32 |  // Row 4
+    0b00000000ULL << 24 |  // Row 5
+    0b00000000ULL << 16 |  // Row 6
+    0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[White][Knight] =
     0b00000000ULL << 56 |  // Row 1
@@ -150,7 +154,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00100100ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
     0b00000000ULL;         // Row 8
     Game->game[White][Bishop] =
@@ -161,7 +165,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
-    0b00100000ULL;         // Row 8
+    0b00000000ULL;         // Row 8
     Game->game[White][Rook] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
@@ -170,7 +174,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b10000001ULL;         // Row 8
+    0b00000000ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1
@@ -180,7 +184,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x10)
-    0b00010000ULL;         // Row 8
+    0b00000000ULL;         // Row 8
 
     Game->game[White][King] =
     0b00000000ULL << 56 |  // Row 1
@@ -190,15 +194,15 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
-    0b00001000ULL;         // Row 8
+    0b10000000ULL;         // Row 8
 
     // Black Pieces
 
     Game->game[Black][Pawn] =
     0b00000000ULL << 56 |  // Row 1
-    0b11100111ULL << 48 |  // Row 2
-    0b00001000ULL << 40 |  // Row 3
-    0b00010000ULL << 32 |  // Row 4
+    0b00000010ULL << 48 |  // Row 2
+    0b00000001ULL << 40 |  // Row 3
+    0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
@@ -206,7 +210,7 @@ void setupBlankGame(struct gameBoard *Game)
     Game->game[Black][Knight] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
-    0b00000100ULL << 40 |  // Row 3
+    0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
@@ -215,34 +219,34 @@ void setupBlankGame(struct gameBoard *Game)
     Game->game[Black][Bishop] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
-    0b00110000ULL << 40 |  // Row 3
+    0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
     Game->game[Black][Rook] =
-    0b10000001ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
-    0b00000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
-    0b00000001ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
-    0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000000ULL;         // Row 8
-
-    Game->game[Black][Queen] =
-    0b00010000ULL << 56 |  // Row 1
+    0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b00000000ULL << 8  |  // Row 7 (0x10)
+    0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
+    0b00000000ULL;         // Row 8
+
+    Game->game[Black][Queen] =
+    0b00000000ULL << 56 |  // Row 1
+    0b00000000ULL << 48 |  // Row 2
+    0b00000000ULL << 40 |  // Row 3
+    0b00000000ULL << 32 |  // Row 4
+    0b00000000ULL << 24 |  // Row 5
+    0b00000000ULL << 16 |  // Row 6
+    0b0000000ULL << 8  |  // Row 7 (0x10)
     0b00000000ULL;         // Row 8
 
     Game->game[Black][King] =
-    0b00001000ULL << 56 |  // Row 1
+    0b10000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4

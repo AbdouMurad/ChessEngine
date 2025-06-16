@@ -12,6 +12,7 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     printMoves(&moves);
     printf("\n");
     int found = 0;
+    
     while (1) {
         printf("Which piece to move?\n");
         scanf("%d",&(Input->start));
@@ -46,8 +47,17 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
 void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
     CheckCollision(1ULL << Input->start, Game, Game);
     CheckCollision(1ULL << Input->end, Game, Game);
-    Game->game[turn][Input->piece] += (1ULL << Input->end);
+    Game->game[turn][Input->piece] |= (1ULL << Input->end);
 
+    //en passant remove piece
+    if (Game->enPassant[!turn] < 8 && Input->start/8 == 4 - turn && Input->end % 8 == Game->enPassant[!turn] && Input->piece == Pawn) {
+        Game->game[!turn][Pawn] ^= 1ULL << (Input->end - 8 + 16*turn);
+    }
+    Game->enPassant[turn] = 8;
+    Game->enPassant[!turn] = 8;
+    if (Input->piece == Pawn && abs(Input->start - Input->end) == 16) {
+        Game->enPassant[turn] = Input->start % 8;
+    }
     if (Input->piece == Pawn && Input->end/8 == (7-7*turn)) {
         Game->game[turn][Pawn] ^= (1ULL << Input->end);
         Game->game[turn][Input->promotion] |= (1ULL << Input->end);
@@ -108,15 +118,15 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
 
 int main(){
     struct gameBoard Game;
-    setupBlankGame(&Game);
-    //setupGame(&Game);
+    //setupBlankGame(&Game);
+    setupGame(&Game);
     struct Move move;
     struct Move Input;
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
     int nodes = 0;
-    /*
+    
     while (gameOver(White, &Game) == Play && gameOver(Black, &Game) == Play) {
         PrintBoard(&Game, -1, -1);
         
@@ -138,9 +148,14 @@ int main(){
     
     free(ttTable);
     return 0;
-    */
+    
+
+
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
-    printf("Start: %d End: %d Piece: %d maxEval: %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, nodes);
+    printf("Start: %d End: %d Piece: %d maxEval: %d More Moves? : %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, MoreMoves(&Game, White),nodes);
     PrintBoard(&Game, move.start, move.end);
+    struct MoveList moves;
+    generateMoves(&Game, &moves, White);
+    printMoves(&moves);
 
 }

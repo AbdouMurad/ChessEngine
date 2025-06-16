@@ -21,6 +21,8 @@ struct gameBoard {
     int moveCount;
     enum Castle WhiteCastle;
     enum Castle BlackCastle;
+    int enPassant[2];
+    
 };
 
 
