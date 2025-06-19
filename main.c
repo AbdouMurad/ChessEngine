@@ -28,7 +28,7 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
             for (int i = 0; i < 6; ++i) {
                 if ((1ULL << Input->start) & Game->game[turn][i]) {
                     Input->piece = i;
-                    if (i == Pawn && Input->end == (7-7*turn)) {
+                    if (i == Pawn && Input->end/8 == (7-7*turn)) {
                         printf("What would you like the piece to promote to?\n");
                         printf("Knight : 2 - Bishop : 3 - Rook : 4 - Queen : 5\n");
                         int x;
@@ -44,11 +44,30 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         }
     }
 }
-void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn) {
+void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struct Stack *stack) {
     CheckCollision(1ULL << Input->start, Game, Game);
-    CheckCollision(1ULL << Input->end, Game, Game);
+    int removed = CheckCollision(1ULL << Input->end, Game, Game);
     Game->game[turn][Input->piece] |= (1ULL << Input->end);
-
+    if (removed) stack->pointer = 0;
+    if (Input->piece == Pawn) stack->pointer = 0;
+    if (removed - 1 == Rook) {
+        if (turn == White && Input->end == 63) {
+            if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackKing;
+            else Game->BlackCastle = Neither;
+        }
+        else if (turn == White && Input->end == 56) {
+            if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackQueen;
+            else Game->BlackCastle = Neither;
+        }
+        else if (turn == Black && Input->end == 7) {
+            if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteKing;
+            else Game->WhiteCastle = Neither;
+        }
+        else if (turn == Black && Input->end == 0) {
+            if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteQueen;
+            else Game->WhiteCastle = Neither; 
+        }
+    }
     //en passant remove piece
     if (Game->enPassant[!turn] < 8 && Input->start/8 == 4 - turn && Input->end % 8 == Game->enPassant[!turn] && Input->piece == Pawn) {
         Game->game[!turn][Pawn] ^= 1ULL << (Input->end - 8 + 16*turn);
@@ -120,42 +139,67 @@ int main(){
     struct gameBoard Game;
     //setupBlankGame(&Game);
     setupGame(&Game);
-    struct Move move;
-    struct Move Input;
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
-    int nodes = 0;
     
-    while (gameOver(White, &Game) == Play && gameOver(Black, &Game) == Play) {
-        PrintBoard(&Game, -1, -1);
-        
-        int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
-        PrintBoard(&Game, -1, -1);
-        printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, nodes);
-        makeMove(&Game, &move, White);
-        PrintBoard(&Game, move.start, move.end);
-        moveInput(&Game, &Input, Black);
-        makeMove(&Game, &Input, Black);
-        PrintBoard(&Game, Input.start, Input.end);
+    enum Color Turn = White;
+
+    struct Stack stack;
+    setupStack(&stack);
+    
+    PrintBoard(&Game, -1, -1);
+    while (gameOver(Turn, &Game) == Play) {
+        if (Turn == White) {
+            printf("_______________________________________________________\n");
+            struct Move move;
+
+            move.start = -1;
+            move.end = -1;
+
+            set_Nodes(0);
+            int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &stack);
+            
+            if (move.start == -1) {
+                struct MoveList moves;
+                generateMoves(&Game, &moves, White);
+                move = moves.moves[0];
+            }
+            
+            makeMove(&Game, &move, White, &stack);
+            push(&stack, computeHash(&Game, White));
+            printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
+            printf("%d %d \n", move.start, move.end);
+
+            PrintBoard(&Game, move.start, move.end);
+        }
+        else {
+            printf("_______________________________________________________\n");
+            struct Move Input;
+            moveInput(&Game, &Input, Black);
+            makeMove(&Game, &Input, Black, &stack);
+            push(&stack, computeHash(&Game, Black));
+            PrintBoard(&Game, Input.start, Input.end);
+            printf("Move Count: %d\n", stack.pointer);
+        }
+        Turn = !Turn;
     }
-
-
 
     if (gameOver(White, &Game) == Stalemate) printf("DRAW - Stalemate\n");
     if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
     else printf("White Win\n");
     
+    deleteStack(&stack);
     free(ttTable);
     return 0;
     
-
-
+/*
+    int nodes = 0;
     int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
     printf("Start: %d End: %d Piece: %d maxEval: %d More Moves? : %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, MoreMoves(&Game, White),nodes);
     PrintBoard(&Game, move.start, move.end);
     struct MoveList moves;
     generateMoves(&Game, &moves, White);
     printMoves(&moves);
-
-}
+*/
+    }

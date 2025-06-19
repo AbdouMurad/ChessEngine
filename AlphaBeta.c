@@ -211,6 +211,202 @@ const long long unsigned int castleHash[4] = {
 
 
 int pieceValue[] = {1000000,100,300,300,500,800};
+
+int pawnPstMg[64] = {
+     0,   0,   0,   0,   0,   0,   0,   0,
+   10,  10,   0,  -5,  -5,   0,  10,  10,
+    5,   0,   0,   5,   5,   0,   0,   5,
+    0,   0,  10,  20,  20,  10,   0,   0,
+    5,   5,  10,  25,  25,  10,   5,   5,
+   10,  10,  20,  30,  30,  20,  10,  10,
+   50,  50,  50,  50,  50,  50,  50,  50,
+     0,   0,   0,   0,   0,   0,   0,   0
+};
+int pawnPstEg[64] = {
+     0,   0,   0,   0,   0,   0,   0,   0,
+   20,  20,  20,  25,  25,  20,  20,  20,
+   15,  15,  15,  20,  20,  15,  15,  15,
+   10,  10,  10,  15,  15,  10,  10,  10,
+    5,   5,   5,  10,  10,   5,   5,   5,
+    0,   0,   0,   5,   5,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,
+     0,   0,   0,   0,   0,   0,   0,   0
+};
+
+int knightPstMg[64] = {
+   -50, -40, -30, -30, -30, -30, -40, -50,
+   -40, -20,   0,   5,   5,   0, -20, -40,
+   -30,   5,  10,  15,  15,  10,   5, -30,
+   -30,   0,  15,  20,  20,  15,   0, -30,
+   -30,   5,  15,  20,  20,  15,   5, -30,
+   -30,   0,  10,  15,  15,  10,   0, -30,
+   -40, -20,   0,   0,   0,   0, -20, -40,
+   -50, -40, -30, -30, -30, -30, -40, -50
+};
+int knightPstEg[64] = {
+   -40, -30, -20, -20, -20, -20, -30, -40,
+   -30, -10,   5,   5,   5,   5, -10, -30,
+   -20,   5,  10,  15,  15,  10,   5, -20,
+   -20,   5,  15,  20,  20,  15,   5, -20,
+   -20,   5,  15,  20,  20,  15,   5, -20,
+   -20,   5,  10,  15,  15,  10,   5, -20,
+   -30, -10,   0,   0,   0,   0, -10, -30,
+   -40, -30, -20, -20, -20, -20, -30, -40
+};
+
+int bishopPstMg[64] = {
+   -20, -10, -10, -10, -10, -10, -10, -20,
+   -10,   5,   0,   0,   0,   0,   5, -10,
+   -10,  10,  10,  10,  10,  10,  10, -10,
+   -10,   0,  10,  15,  15,  10,   0, -10,
+   -10,   5,  10,  15,  15,  10,   5, -10,
+   -10,   0,  10,  10,  10,  10,   0, -10,
+   -10,   0,   0,   0,   0,   0,   0, -10,
+   -20, -10, -10, -10, -10, -10, -10, -20
+};
+int bishopPstEg[64] = {
+   -10, -5, -5, -5, -5, -5, -5, -10,
+    -5, 10, 10, 10, 10, 10, 10,  -5,
+    -5, 10, 15, 15, 15, 15, 10,  -5,
+    -5, 10, 15, 20, 20, 15, 10,  -5,
+    -5, 10, 15, 20, 20, 15, 10,  -5,
+    -5, 10, 15, 15, 15, 15, 10,  -5,
+    -5, 10, 10, 10, 10, 10, 10,  -5,
+   -10, -5, -5, -5, -5, -5, -5, -10
+};
+
+int rookPstMg[64] = {
+     0,   0,   5,  10,  10,   5,   0,   0,
+    -5,   0,   0,   5,   5,   0,   0,  -5,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+     5,  10,  10,  10,  10,  10,  10,   5,
+     0,   0,   0,   5,   5,   0,   0,   0
+};
+int rookPstEg[64] = {
+     0,   5,   5,  10,  10,   5,   5,   0,
+     0,   0,   0,   5,   5,   0,   0,   0,
+    -5,   0,   0,   5,   5,   0,   0,  -5,
+    -5,   0,   0,   5,   5,   0,   0,  -5,
+    -5,   0,   0,   5,   5,   0,   0,  -5,
+    -5,   0,   0,   5,   5,   0,   0,  -5,
+     5,  10,  10,  20,  20,  10,  10,   5,
+     0,   0,   5,  10,  10,   5,   0,   0
+};
+
+int queenPstMg[64] = {
+   -20, -10, -10,  -5,  -5, -10, -10, -20,
+   -10,   0,   0,   0,   0,   0,   0, -10,
+   -10,   0,   5,   5,   5,   5,   0, -10,
+    -5,   0,   5,   5,   5,   5,   0,  -5,
+     0,   0,   5,   5,   5,   5,   0,  -5,
+   -10,   5,   5,   5,   5,   5,   0, -10,
+   -10,   0,   5,   0,   0,   0,   0, -10,
+   -20, -10, -10,  -5,  -5, -10, -10, -20
+};
+int queenPstEg[64] = {
+   -10,  -5,  -5,  -5,  -5,  -5,  -5, -10,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+    -5,   0,   5,   5,   5,   5,   0,  -5,
+    -5,   0,   5,  10,  10,   5,   0,  -5,
+    -5,   0,   5,  10,  10,   5,   0,  -5,
+    -5,   0,   5,   5,   5,   5,   0,  -5,
+    -5,   0,   0,   0,   0,   0,   0,  -5,
+   -10,  -5,  -5,  -5,  -5,  -5,  -5, -10
+};
+
+int kingPstMg[64] = {
+   -30, -40, -40, -50, -50, -40, -40, -30,
+   -30, -40, -40, -50, -50, -40, -40, -30,
+   -30, -40, -40, -50, -50, -40, -40, -30,
+   -30, -40, -40, -50, -50, -40, -40, -30,
+   -20, -30, -30, -40, -40, -30, -30, -20,
+   -10, -20, -20, -20, -20, -20, -20, -10,
+    20,  20,   0,   0,   0,   0,  20,  20,
+    20,  30,  10,   0,   0,  10,  30,  20
+};
+int kingPstEg[64] = {
+   -50, -30, -30, -30, -30, -30, -30, -50,
+   -30, -10,   0,   0,   0,   0, -10, -30,
+   -30,   0,  10,  15,  15,  10,   0, -30,
+   -30,   0,  15,  20,  20,  15,   0, -30,
+   -30,   0,  15,  20,  20,  15,   0, -30,
+   -30,   0,  10,  15,  15,  10,   0, -30,
+   -30, -10,   0,   0,   0,   0, -10, -30,
+   -50, -30, -30, -30, -30, -30, -30, -50
+};
+
+int *mgPst[6] = {
+    kingPstMg, pawnPstMg, knightPstMg, bishopPstMg, rookPstMg, queenPstMg
+};
+int *egPst[6] = {
+    kingPstEg, pawnPstEg, knightPstEg, bishopPstEg, rookPstEg, queenPstEg 
+};
+
+//old psts
+/*{
+int eg_pawn_table[64] = {
+      0,   0,   0,   0,   0,   0,   0,   0,
+    178, 173, 158, 134, 147, 132, 165, 187,
+     94, 100,  85,  67,  56,  53,  82,  84,
+     32,  24,  13,   5,  -2,   4,  17,  17,
+     13,   9,  -3,  -7,  -7,  -8,   3,  -1,
+      4,   7,  -6,   1,   0,  -5,  -1,  -8,
+     13,   8,   8,  10,  13,   0,   2,  -7,
+      0,   0,   0,   0,   0,   0,   0,   0,
+};
+int eg_knight_table[64] = {
+    -58, -38, -13, -28, -31, -27, -63, -99,
+    -25,  -8, -25,  -2,  -9, -25, -24, -52,
+    -24, -20,  10,   9,  -1,  -9, -19, -41,
+    -17,   3,  22,  22,  22,  11,   8, -18,
+    -18,  -6,  16,  25,  16,  17,   4, -18,
+    -23,  -3,  -1,  15,  10,  -3, -20, -22,
+    -42, -20, -10,  -5,  -2, -20, -23, -44,
+    -29, -51, -23, -15, -22, -18, -50, -64,
+};
+int eg_bishop_table[64] = {
+    -14, -21, -11,  -8, -7,  -9, -17, -24,
+     -8,  -4,   7, -12, -3, -13,  -4, -14,
+      2,  -8,   0,  -1, -2,   6,   0,   4,
+     -3,   9,  12,   9, 14,  10,   3,   2,
+     -6,   3,  13,  19,  7,  10,  -3,  -9,
+    -12,  -3,   8,  10, 13,   3,  -7, -15,
+    -14, -18,  -7,  -1,  4,  -9, -15, -27,
+    -23,  -9, -23,  -5, -9, -16,  -5, -17,
+};
+int eg_rook_table[64] = {
+    13, 10, 18, 15, 12,  12,   8,   5,
+    11, 13, 13, 11, -3,   3,   8,   3,
+     7,  7,  7,  5,  4,  -3,  -5,  -3,
+     4,  3, 13,  1,  2,   1,  -1,   2,
+     3,  5,  8,  4, -5,  -6,  -8, -11,
+    -4,  0, -5, -1, -7, -12,  -8, -16,
+    -6, -6,  0,  2, -9,  -9, -11,  -3,
+    -9,  2,  3, -1, -5, -13,   4, -20,
+};
+int eg_queen_table[64] = {
+     -9,  22,  22,  27,  27,  19,  10,  20,
+    -17,  20,  32,  41,  58,  25,  30,   0,
+    -20,   6,   9,  49,  47,  35,  19,   9,
+      3,  22,  24,  45,  57,  40,  57,  36,
+    -18,  28,  19,  47,  31,  34,  39,  23,
+    -16, -27,  15,   6,   9,  17,  10,   5,
+    -22, -23, -30, -16, -16, -23, -36, -32,
+    -33, -28, -22, -43,  -5, -32, -20, -41,
+};
+int eg_king_table[64] = {
+    -74, -35, -18, -18, -11,  15,   4, -17,
+    -12,  17,  14,  17,  17,  38,  23,  11,
+     10,  17,  23,  15,  20,  45,  44,  13,
+     -8,  22,  24,  27,  26,  33,  26,   3,
+    -18,  -4,  21,  24,  27,  23,   9, -11,
+    -19,  -3,  11,  21,  23,  16,   7,  -9,
+    -27, -11,   4,  13,  14,   4,  -5, -17,
+    -53, -34, -21, -11, -28, -14, -24, -43
+};
 int pawnPst[] = {
     0,  0,  0,  0,  0,  0,  0,  0,
     5, 10, 10,-20,-20, 10, 10,  5,
@@ -266,6 +462,7 @@ int kingPst[] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
 };
+}*/
 
 int max(int a, int b) {
     return a > b ? a : b;
@@ -276,8 +473,6 @@ int min(int a, int b) {
 int abs(int a) {
     return a > 0 ? a : -1 * a;
 }
-
-
 
 struct TTEntry *probe(long long unsigned int key, struct TTEntry *table) {
     int hash = key % TT_SIZE;
@@ -354,7 +549,7 @@ void InsertSort(struct Move *moves, int count) {
 void printMoves(struct MoveList *moves) {
     printf("Moves: %d \n", moves->count);
     for (int i = 0; i < moves->count; ++i) {
-        if (i % 10 == 0) printf("\n");
+        if (i % 3 == 0) printf("\n");
         printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
         if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
         else printf("] ");
@@ -362,11 +557,44 @@ void printMoves(struct MoveList *moves) {
     printf("\n");
 }
 
+void setupStack(struct Stack *stack) {
+    stack->stack = malloc(sizeof(unsigned long long int) * stack->size);
+}
+
+void deleteStack(struct Stack *stack) {
+    free(stack->stack);
+}
+
+void push(struct Stack *stack, unsigned long long int value) {
+    stack->stack[stack->pointer++] = value;
+    if (stack->size == stack->pointer) {
+        stack->size *= 2;
+        unsigned long long int *newStack = malloc(sizeof(unsigned long long int) * stack->size);
+        for (int i = 0; i < stack->pointer; ++i) {
+            newStack[i] = stack->stack[i];
+        }
+        free(stack->stack);
+        stack->stack = newStack;
+    }
+}
+long long unsigned int pop(struct Stack *stack) {
+    if (stack->pointer < 0) return 0;
+    return stack->stack[stack->pointer--];
+}
+
+int search(struct Stack *stack, unsigned long long int value) {
+    int count = 0;
+    for (int i = 0; i < stack->pointer; i++) {
+        if (stack->stack[i] == value) count += 1;
+        if (value == 3) return 3;
+    }
+    return count;
+}
 //for debug - broken
 void printPieceMoves(struct MoveList *moves, enum Piece piece) {
     printf("Moves: %d \n", moves->count);
     for (int i = 0; i < moves->count; ++i) {
-        if (i % 10 == 0) printf("\n");
+        if (i % 3 == 0) printf("\n");
         if (moves->moves[i].piece != piece) continue;
         printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
         if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
@@ -396,9 +624,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         newGame.game[!color][Pawn] ^= 1ULL << (position/8 + 1 - 2 * color)*8 + Game->enPassant[!color] - 8 + 16 * color;
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, (position/8 + 1 - 2 * color)*8 + Game->enPassant[!color], piece};
-                            move.score = 100;
-                            move.score += 900;
-                            newGame.enPassant[!color] = 8;
+                            move.score = 1000;
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
                             moves->moves[moves->count++] = move;
@@ -452,10 +678,11 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if ((color == White && position/8 < 6) || (color == Black && position/8 > 1)) {
                         newGame.game[color][Pawn] ^= 1ULL << position;
                         newGame.game[color][Pawn] |= 1ULL << (position + 7 - 16 * color);
+                        int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 7 - 16 * color, Pawn};
                             move.score = 0;
-                            move.score += pieceValue[CheckCollision(1ULL << (position + 7 - 16 * color), Game, &newGame)-1] * 10 - pieceValue[Pawn];
+                            move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
                             moves->moves[moves->count++] = move;
@@ -467,10 +694,11 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             enum Piece t = (enum Piece)k;
                             newGame.game[color][Pawn] ^= 1ULL << position;
                             newGame.game[color][Pawn] |= 1ULL << (position + 7 - 16*color);
+                            int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 7 - 16*color, Pawn, t};
                                 move.score = 0;
-                                move.score += pieceValue[CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame)-1] * 10 - pieceValue[Pawn];
+                                move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
                                 move.score += pieceValue[k];
@@ -484,10 +712,11 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (position/8 < 6) {
                         newGame.game[color][Pawn] ^= 1ULL << position;
                         newGame.game[color][Pawn] |= 1ULL << (position + 9 - 16 * color);
+                        int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 9 - 16 * color, Pawn};
                             move.score = 0;
-                            move.score += pieceValue[CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame)-1] * 10 - pieceValue[Pawn];
+                            move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
                             moves->moves[moves->count++] = move;
@@ -499,10 +728,11 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             enum Piece t = (enum Piece)k;
                             newGame.game[color][Pawn] ^= 1ULL << position;
                             newGame.game[color][Pawn] |= 1ULL << (position + 9 - 16 * color);
+                            int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 9 - 16 * color, Pawn, t};
                                 move.score = 0;
-                                move.score += pieceValue[CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame)-1] * 10 - pieceValue[Pawn];
+                                move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
                                 move.score += pieceValue[k];
@@ -1002,7 +1232,7 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
 {    
     //check for pawn attacks
     if (turn == White){
-        if (position/8 < 6){
+        if (position/8 < 7){
             long long int PossiblePawn = 0b0ULL;
             if (position % 8 > 0) PossiblePawn += (Game->game[turn][King] << 7);
             if (position % 8 < 7) PossiblePawn += (Game->game[turn][King] << 9);
@@ -1010,7 +1240,7 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
         }
     }
     else {
-        if (position/8 > 1){
+        if (position/8 > 0){
             long long int PossiblePawn = 0b0ULL;
             if (position % 8 > 0) PossiblePawn += (Game->game[turn][King] >> 7);
             if (position % 8 < 7) PossiblePawn += (Game->game[turn][King] >> 9);
@@ -1113,92 +1343,57 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     return 0;    
 }
 
-int evaluate(struct gameBoard *Game, enum Color turn){
-    /*int x = gameOver(turn, Game);
-    if (x == Stalemate) return 0;
-    if (x == Checkmate) {
-        if (turn == White) return -10000000;
-        else return 10000000;
-    }*/
-    
+int Phase(struct gameBoard *Game) {
+    int phase = 0;
+    int coord = 0;
+    unsigned long long int current = 0b0;
+    current = Game->game[White][Queen] | Game->game[Black][Queen];
+    while (current) {
+        coord = __builtin_ctzll(current);
+        current &= current -1;
+        phase += 4;
+    }
+    current = Game->game[White][Knight] | Game->game[Black][Knight] | Game->game[White][Bishop] | Game->game[Black][Bishop];
+    while (current) {
+        coord = __builtin_ctzll(current);
+        current &= current -1;
+        phase += 1;
+    }
+    current = Game->game[White][Rook] | Game->game[Black][Rook];
+    while (current) {
+        coord = __builtin_ctzll(current);
+        current &= current -1;
+        phase += 2;
+    }
+    return min(phase, 24);
+}
+
+int evaluate(struct gameBoard *Game, enum Color turn) {
+    int phase = Phase(Game);
+    return (evaluateBoard(Game, mgPst));
+    return (evaluateBoard(Game, mgPst) * phase + evaluateBoard(Game, egPst) * (24 - phase))/24;
+}
+
+int evaluateBoard(struct gameBoard *Game, int **Pst){    
     int score = 0;
     int coord;
     unsigned long long int current;
-
-    current = Game->game[White][Pawn];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 100 + pawnPst[coord];
+    
+    for (int Piece = Queen; Piece >= King; --Piece) {
+        enum Piece piece = (enum Piece)Piece;
+        current = Game->game[White][piece];
+        while (current) {
+            coord = __builtin_ctzll(current);
+            current &= current - 1;
+            score = score + pieceValue[piece] + Pst[piece][coord];
+        }
+        current = Game->game[Black][piece];
+        while (current) {
+            coord = __builtin_ctzll(current);
+            current &= current - 1;
+            score = score - pieceValue[piece] - Pst[piece][63 - coord];
+        }
     }
-    current = Game->game[White][Knight];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 300 + knightPst[coord];
-    }
-    current = Game->game[White][Bishop];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 300 + bishopPst[coord];
-    }
-    current = Game->game[White][Rook];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 500 + rookPst[coord];
-    }
-    current = Game->game[White][Queen];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 800 + queenPst[coord];
-    }
-    current = Game->game[White][King];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score + 1000000 + kingPst[coord];
-    }
-    //Black
-    current = Game->game[Black][Pawn];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (100 + pawnPst[63 - coord]);
-    }
-    current = Game->game[Black][Knight];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (300 + knightPst[63 - coord]);
-    }
-    current = Game->game[Black][Bishop];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (300 + bishopPst[63 - coord]);
-    }
-    current = Game->game[Black][Rook];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (500 + rookPst[63 - coord]);
-    }
-    current = Game->game[Black][Queen];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (800 + queenPst[63 - coord]);
-    }
-    current = Game->game[Black][King];
-    while (current){
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        score = score - (1000000 + kingPst[63 - coord]);  
-    }
-    //if (score > 10000) printf("BLACKKING: %lld\n", Game->game[Black][King]);
     return score;
 }
 
@@ -1482,28 +1677,28 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
                 currentPiece &= currentPiece - 1;
-                for (int x = position % 8,  y = position/8 + 1; y < 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y) {
+                for (int x = position % 8,  y = position/8 + 1; y <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8,  y = position/8 - 1; y > 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y) {
+                for (int x = position % 8,  y = position/8 - 1; y >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8 - 1, y = position/8; x > 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
+                for (int x = position % 8 - 1, y = position/8; x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8 + 1, y = position/8; x < 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
+                for (int x = position % 8 + 1, y = position/8; x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
@@ -1517,28 +1712,28 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
                 currentPiece &= currentPiece - 1;
-                for (int x = position % 8 + 1,  y = position/8 + 1; y < 7 && x < 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, ++x) {
+                for (int x = position % 8 + 1,  y = position/8 + 1; y <= 7 && x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, ++x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8 - 1,  y = position/8 + 1; y < 7 && x > 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, --x) {
+                for (int x = position % 8 - 1,  y = position/8 + 1; y <= 7 && x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8 - 1,  y = position/8 - 1; y > 0 && x > 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, --x) {
+                for (int x = position % 8 - 1,  y = position/8 - 1; y >= 0 && x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
-                for (int x = position % 8 + 1,  y = position/8 - 1; y > 0 && x < 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, ++x) {
+                for (int x = position % 8 + 1,  y = position/8 - 1; y >= 0 && x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, ++x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
                     int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
                     if (!inCheck(&copyGame, color)) return 1;
@@ -1600,7 +1795,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
         }
     }
     return 0;
-}\
+}
 
 int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color lost
 {
@@ -1608,21 +1803,28 @@ int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color l
     if (inCheck(game, turn)) return Checkmate;
     return Stalemate;
 }
-
-
-
+int Nodes = 0;
+int get_Nodes() {
+    return Nodes;
+}
+void set_Nodes(int i) {
+    Nodes = i;
+}
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
-int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, int *nodes) {
-    *nodes += 1;
+int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
+    Nodes += 1;
     int x = gameOver(Turn, Game);
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
         if (Turn == White) return -10000000 + depth;
         else return 10000000 - depth;
     }
-    if (depth == 0) return evaluate(Game, Turn);
     //probe the hash
     unsigned long long int hash = computeHash(Game, Turn);
+    ///push(stack, hash);
+    //if (search(stack, hash) == 3) return 0;
+    if (depth == 0) return evaluate(Game, Turn);
+
     struct TTEntry *entry = probe(hash, table);
     if (entry && entry->depth >= depth) {
         if (entry->flag == EXACT) {
@@ -1634,7 +1836,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             return entry->score;
         }
         if (entry->flag == HIGHERBOUND && entry->score <= alpha) {
-                if (depth == DEPTH) *Move = entry->BestMove;
+            if (depth == DEPTH) *Move = entry->BestMove;
             return entry->score;
         }
     }
@@ -1651,13 +1853,34 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     if (maximizingPlayer) {
         int maxEval = -10000000;
         struct Move move;
+        struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i) {
-            struct gameBoard newGame = *Game;
+            newGame = *Game;
             move = moves.moves[i];
-            CheckCollision((1ULL << move.end), Game, &newGame);
+            
+            //apply move
+            int removed = CheckCollision((1ULL << move.end), Game, &newGame);
             newGame.game[Turn][move.piece] ^= (1ULL << move.start);
             newGame.game[Turn][move.piece] |= (1ULL << move.end);
-            if (inCheck(&newGame, Turn)) continue;
+            if (removed - 1 == Rook) {
+                if (Turn == White && move.end == 63) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
+                    else newGame.BlackCastle = Neither;
+                }
+                else if (Turn == White && move.end == 56) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
+                    else newGame.BlackCastle = Neither;
+                }
+                else if (Turn == Black && move.end == 7) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
+                    else newGame.WhiteCastle = Neither;
+                }
+                else if (Turn == Black && move.end == 0) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
+                    else newGame.WhiteCastle = Neither; 
+                }
+            }
+
             //check for promotion
             if (move.piece == Pawn && (move.end/8 == 7 - 7*Turn)) {
                 newGame.game[Turn][Pawn] ^= (1ULL << move.end);
@@ -1697,11 +1920,11 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == Rook) {
                 if (Turn == White && Game->WhiteCastle != Neither) {
                     if (move.start == 0) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle == WhiteQueen;
+                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
                         else newGame.WhiteCastle = Neither;
                     }
                     else if (move.start == 7) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle == WhiteKing;
+                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                         else newGame.WhiteCastle = Neither;
                     }
                 }
@@ -1721,13 +1944,21 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (Game->enPassant[!Turn] < 8 && move.start == 4 - Turn && move.end % 8 == Game->enPassant[!Turn] && move.piece == Pawn) {
                 newGame.game[!Turn][Pawn] ^= 1ULL << move.end - 8 + 16*Turn;
             }
+
+            //reset enPassant
             newGame.enPassant[White] = 8;
             newGame.enPassant[Black] = 8;
 
+            //check for new enPassant flag
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
                 newGame.enPassant[Turn] = move.end % 8;
             }
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, nodes);
+            push(stack, computeHash(Game, Turn));
+            
+            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, stack);
+            
+            pop(stack);
+            if (search(stack, hash) == 3) eval = 0;
 
             if (eval > maxEval) {
                 maxEval = eval;
@@ -1737,26 +1968,44 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             alpha = max(alpha, eval);
             if (beta <= alpha) break;
         }
+
         int flag;
         if (maxEval <= originalAlpha) flag = HIGHERBOUND;
         else if (maxEval >= originalBeta) flag = LOWERBOUND;
         else flag = EXACT;
         store(hash, depth, maxEval, flag, BestMove, table);
-
-
-
         return maxEval;
     }
     else {
         int minEval = 10000000;
         struct Move move;
+        struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i){
-            struct gameBoard newGame = *Game;
+            newGame = *Game;
             move = moves.moves[i];
-            CheckCollision((1ULL << move.end), Game, &newGame);
+
+
+            int removed = CheckCollision((1ULL << move.end), Game, &newGame);
             newGame.game[Turn][move.piece] ^= (1ULL << move.start);
             newGame.game[Turn][move.piece] |= (1ULL << move.end);
-            if (inCheck(&newGame, Turn)) continue;
+            if (removed - 1 == Rook) {
+                if (Turn == White && move.end == 63) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
+                    else newGame.BlackCastle = Neither;
+                }
+                else if (Turn == White && move.end == 56) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
+                    else newGame.BlackCastle = Neither;
+                }
+                else if (Turn == Black && move.end == 7) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
+                    else newGame.WhiteCastle = Neither;
+                }
+                else if (Turn == Black && move.end == 0) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
+                    else newGame.WhiteCastle = Neither; 
+                }
+            }
             //Check promotion
             if (move.piece == Pawn && (move.end/8 == 7 - 7*Turn)) {
                 newGame.game[Turn][Pawn] ^= (1ULL << move.end);
@@ -1794,11 +2043,11 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == Rook) {
                 if (Turn == White && Game->WhiteCastle != Neither) {
                     if (move.start == 0) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle == WhiteQueen;
+                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
                         else newGame.WhiteCastle = Neither;
                     }
                     else if (move.start == 7) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle == WhiteKing;
+                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                         else newGame.WhiteCastle = Neither;
                     }
                 }
@@ -1825,18 +2074,20 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
                 newGame.enPassant[Turn] = move.end % 8;
             }
+            push(stack, computeHash(Game, Turn));
+
+            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, stack);
             
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, nodes);
+            pop(stack);
+            if (search(stack, hash) == 3) eval = 0;
+
             if (eval < minEval) {
                 minEval = eval;
                 BestMove = move;
                 if (depth == DEPTH) *Move = move;
             }
             beta = min(beta, eval);
-            if (beta <= alpha) 
-            {
-                break;
-            }
+            if (beta <= alpha) break;
         }
 
         int flag;
