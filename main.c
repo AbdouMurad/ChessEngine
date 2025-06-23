@@ -14,10 +14,17 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     int found = 0;
     
     while (1) {
+        char c;
+        int i;
         printf("Which piece to move?\n");
-        scanf("%d",&(Input->start));
-        printf("Where to?\n");
-        scanf("%d", &(Input->end));
+        scanf("%c", &c);
+        scanf("%d", &i);
+        Input->start = 7 - (c - 'a') + 8*(i-1);
+        scanf("%c", &c);
+        scanf("%d", &i);
+        Input->end   = 7 - (c - 'a') + 8*(i-1);
+        scanf("%c", &c);
+        printf("%d %d\n", Input->start, Input->end);
         for (int x = 0; x < moves.count; ++x) {
             if (moves.moves[x].start == Input->start && Input->end == moves.moves[x].end) {
                 found = 1;
@@ -137,8 +144,8 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    //setupBlankGame(&Game);
-    setupGame(&Game);
+    setupBlankGame(&Game);
+    //setupGame(&Game);
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
@@ -147,9 +154,9 @@ int main(){
 
     struct Stack stack;
     setupStack(&stack);
-    
+    int x = 0;
     PrintBoard(&Game, -1, -1);
-    while (gameOver(Turn, &Game) == Play) {
+    while (gameOver(Turn, &Game) == Play && search(&stack, computeHash(&Game, Turn)) != 3) {
         if (Turn == White) {
             printf("_______________________________________________________\n");
             struct Move move;
@@ -165,13 +172,13 @@ int main(){
                 generateMoves(&Game, &moves, White);
                 move = moves.moves[0];
             }
-            
             makeMove(&Game, &move, White, &stack);
+            printf("here:%lld %d\n", computeHash(&Game, Turn), x);
             push(&stack, computeHash(&Game, White));
             printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
             printf("%d %d \n", move.start, move.end);
-
             PrintBoard(&Game, move.start, move.end);
+            if (search(&stack, computeHash(&Game, Turn)) == 3) break;
         }
         else {
             printf("_______________________________________________________\n");
@@ -180,13 +187,13 @@ int main(){
             makeMove(&Game, &Input, Black, &stack);
             push(&stack, computeHash(&Game, Black));
             PrintBoard(&Game, Input.start, Input.end);
+            if (search(&stack, computeHash(&Game, Turn)) == 3) break;
             printf("Move Count: %d\n", stack.pointer);
         }
         Turn = !Turn;
     }
-
-    if (gameOver(White, &Game) == Stalemate) printf("DRAW - Stalemate\n");
-    if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
+    if (gameOver(White, &Game) == Stalemate || search(&stack, computeHash(&Game, Turn)) == 3) printf("DRAW - Stalemate\n");
+    else if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
     else printf("White Win\n");
     
     deleteStack(&stack);

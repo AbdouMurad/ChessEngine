@@ -558,7 +558,9 @@ void printMoves(struct MoveList *moves) {
 }
 
 void setupStack(struct Stack *stack) {
+    stack->size = 32;
     stack->stack = malloc(sizeof(unsigned long long int) * stack->size);
+    stack->pointer = 0;
 }
 
 void deleteStack(struct Stack *stack) {
@@ -579,14 +581,14 @@ void push(struct Stack *stack, unsigned long long int value) {
 }
 long long unsigned int pop(struct Stack *stack) {
     if (stack->pointer < 0) return 0;
+    
     return stack->stack[stack->pointer--];
 }
 
 int search(struct Stack *stack, unsigned long long int value) {
     int count = 0;
-    for (int i = 0; i < stack->pointer; i++) {
+    for (int i = 0; i < stack->pointer && count < 3; i++) {
         if (stack->stack[i] == value) count += 1;
-        if (value == 3) return 3;
     }
     return count;
 }
@@ -1813,16 +1815,19 @@ void set_Nodes(int i) {
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
 int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
     Nodes += 1;
+    unsigned long long int hash = computeHash(Game, Turn);
     int x = gameOver(Turn, Game);
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
         if (Turn == White) return -10000000 + depth;
         else return 10000000 - depth;
     }
-    //probe the hash
-    unsigned long long int hash = computeHash(Game, Turn);
-    ///push(stack, hash);
+
+    //push(stack, hash);
     //if (search(stack, hash) == 3) return 0;
+    
+    
+    
     if (depth == 0) return evaluate(Game, Turn);
 
     struct TTEntry *entry = probe(hash, table);
@@ -1953,12 +1958,12 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
                 newGame.enPassant[Turn] = move.end % 8;
             }
+
             push(stack, computeHash(Game, Turn));
             
             eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, stack);
-            
+
             pop(stack);
-            if (search(stack, hash) == 3) eval = 0;
 
             if (eval > maxEval) {
                 maxEval = eval;
@@ -2074,12 +2079,13 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
                 newGame.enPassant[Turn] = move.end % 8;
             }
-            push(stack, computeHash(Game, Turn));
 
+            push(stack, computeHash(Game, Turn));
+            
             eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, stack);
             
             pop(stack);
-            if (search(stack, hash) == 3) eval = 0;
+
 
             if (eval < minEval) {
                 minEval = eval;

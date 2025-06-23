@@ -143,10 +143,10 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00100000ULL << 32 |  // Row 4
-    0b00010001ULL << 24 |  // Row 5
+    0b00000000ULL << 32 |  // Row 4
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b00000010ULL << 8  |  // Row 7
+    0b00010000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[White][Knight] =
     0b00000000ULL << 56 |  // Row 1
@@ -155,7 +155,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b00001000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
+    0b00000000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
     0b00000000ULL;         // Row 8
     Game->game[White][Bishop] =
     0b00000000ULL << 56 |  // Row 1
@@ -163,18 +163,18 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000010ULL << 16 |  // Row 6
+    0b00100000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
     Game->game[White][Rook] =
-    0b01000100ULL << 56 |  // Row 1
+    0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
-    0b00000000ULL << 40 |  // Row 3
+    0b00000001ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000000ULL;         // Row 8
+    0b10000000ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1
@@ -192,19 +192,19 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
+    0b00000010ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
-    0b00000010ULL;         // Row 8
+    0b00000000ULL;         // Row 8
 
     // Black Pieces
 
     Game->game[Black][Pawn] =
     0b00000000ULL << 56 |  // Row 1
-    0b10010011ULL << 48 |  // Row 2
-    0b00001000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
-    0b00000000ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
+    0b00000100ULL << 48 |  // Row 2
+    0b00000000ULL << 40 |  // Row 3
+    0b00000010ULL << 32 |  // Row 4
+    0b00100000ULL << 24 |  // Row 5
+    0b00010000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[Black][Knight] =
@@ -218,8 +218,8 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL;         // Row 8
     Game->game[Black][Bishop] =
     0b00000000ULL << 56 |  // Row 1
-    0b00001000ULL << 48 |  // Row 2
-    0b00100000ULL << 40 |  // Row 3
+    0b00000000ULL << 48 |  // Row 2
+    0b00001000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
@@ -230,8 +230,8 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000000ULL << 24 |  // Row 5
-    0b10000000ULL << 16 |  // Row 6
+    0b00000100ULL << 24 |  // Row 5
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
     0b00000000ULL;         // Row 8
 
@@ -246,12 +246,12 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL;         // Row 8
 
     Game->game[Black][King] =
-    0b00000010ULL << 56 |  // Row 1
+    0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
+    0b01000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
     0b00000000ULL;         // Row 8
 }
@@ -286,6 +286,9 @@ void PrintBoard(struct gameBoard *Game, int start, int end) {
   long long unsigned int current = 1ULL << 63;
   int cur = 0;
   for (int i = 0; i < 8; ++i) {
+    setColour(WHITE);
+    printf("%d",(8-i));
+    printf("|");
     for (int j = 0; j < 8; ++j) {
       cur = 63 - (i*8 + j);
       if (cur == start) setColour(YELLOW);
@@ -312,11 +315,11 @@ void PrintBoard(struct gameBoard *Game, int start, int end) {
       }
       current = current >> 1;
     }        
-    setColour(WHITE);
-    printf("%d  \n",(7-i)*8);
+    printf("\n");
   }
-  printf("\n");
   setColour(WHITE);
+  printf("X|---------------\n");
+  printf("  a b c d e f g h\n");
 }
 
 int MakeMove(struct gameBoard *Game, int start, int end, enum Color color) {
