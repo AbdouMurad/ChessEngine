@@ -1,5 +1,6 @@
 #define MAX_MOVES 128
 #define DEPTH 7
+#define INF 1000000
 #define TT_SIZE (1 << 22)
 
 struct Move {

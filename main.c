@@ -144,8 +144,8 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    //setupBlankGame(&Game);
-    setupGame(&Game);
+    setupBlankGame(&Game);
+    //setupGame(&Game);
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
@@ -165,7 +165,7 @@ int main(){
             move.end = -1;
 
             set_Nodes(0);
-            int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &stack);
+            int eval = alphabeta(DEPTH, &Game, White, -INF, INF, 1, &move, ttTable, &stack);
             
             if (move.start == -1) {
                 struct MoveList moves;

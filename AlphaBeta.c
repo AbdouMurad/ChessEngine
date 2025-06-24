@@ -1815,21 +1815,22 @@ void set_Nodes(int i) {
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
 int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
     Nodes += 1;
-    unsigned long long int hash = computeHash(Game, Turn);
+    unsigned long long int hash = computeHash(Game, !maximizingPlayer);
     int x = gameOver(Turn, Game);
     if (search(stack, hash) >= 2) return 0;
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
-        if (Turn == White) return -10000000 + depth;
-        else return 10000000 - depth;
+        if (maximizingPlayer) return -INF + (DEPTH*100 - depth*100);
+        else {
+            printf("%d %d\n", INF - (DEPTH*100 - depth*100), depth);
+            return INF - (DEPTH *100 - depth*100);
+        }
     }
 
     //push(stack, hash);
     //if (search(stack, hash) == 3) return 0;
     
-    
-    
-    if (depth == 0) return evaluate(Game, Turn);
+    if (depth == 0) return evaluate(Game, !maximizingPlayer);
 
     struct TTEntry *entry = probe(hash, table);
     if (entry && entry->depth >= depth) {
@@ -1850,14 +1851,15 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     long long int TempPiece;
     int eval;
     int originalAlpha = alpha, originalBeta = beta;
+
     struct MoveList moves;
-    generateMoves(Game, &moves, Turn);
+    generateMoves(Game, &moves, !max);
     InsertSort(moves.moves, moves.count);
-    //if (depth == DEPTH) printMoves(&moves); // Debug
+
     
     //Maximizing Player
     if (maximizingPlayer) {
-        int maxEval = -10000000;
+        int maxEval = -INF;
         struct Move move;
         struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i) {
@@ -1866,8 +1868,8 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             
             //apply move
             int removed = CheckCollision((1ULL << move.end), Game, &newGame);
-            newGame.game[Turn][move.piece] ^= (1ULL << move.start);
-            newGame.game[Turn][move.piece] |= (1ULL << move.end);
+            newGame.game[White][move.piece] ^= (1ULL << move.start);
+            newGame.game[White][move.piece] |= (1ULL << move.end);
             if (removed - 1 == Rook) {
                 if (Turn == White && move.end == 63) {
                     if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
@@ -1947,7 +1949,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             }
 
             //en passant
-            if (Game->enPassant[!Turn] < 8 && move.start == 4 - Turn && move.end % 8 == Game->enPassant[!Turn] && move.piece == Pawn) {
+            if (Game->enPassant[!Turn] < 8 && move.start == (4 - Turn) && move.end % 8 == Game->enPassant[!Turn] && move.piece == Pawn) {
                 newGame.game[!Turn][Pawn] ^= 1ULL << move.end - 8 + 16*Turn;
             }
 
@@ -1983,7 +1985,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
         return maxEval;
     }
     else {
-        int minEval = 10000000;
+        int minEval = INF;
         struct Move move;
         struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i){
@@ -2021,7 +2023,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             if (move.piece == King && abs(move.start - move.end) == 2) {
                 if (Turn == White) {
                     newGame.WhiteCastle = Neither;
-                    if (move.end = 5) {
+                    if (move.end == 5) {
                         newGame.game[White][Rook] ^= (1ULL << 7);
                         newGame.game[White][Rook] |= (1ULL << 4);
                     }
