@@ -587,7 +587,7 @@ long long unsigned int pop(struct Stack *stack) {
 
 int search(struct Stack *stack, unsigned long long int value) {
     int count = 0;
-    for (int i = 0; i < stack->pointer && count < 3; i++) {
+    for (int i = 0; i < stack->pointer; ++i) {
         if (stack->stack[i] == value) count += 1;
     }
     return count;
@@ -1817,6 +1817,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     Nodes += 1;
     unsigned long long int hash = computeHash(Game, Turn);
     int x = gameOver(Turn, Game);
+    if (search(stack, hash) >= 2) return 0;
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
         if (Turn == White) return -10000000 + depth;
@@ -1959,7 +1960,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
                 newGame.enPassant[Turn] = move.end % 8;
             }
 
-            push(stack, computeHash(Game, Turn));
+            push(stack, computeHash(&newGame, !Turn));
             
             eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, stack);
 
@@ -2080,7 +2081,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
                 newGame.enPassant[Turn] = move.end % 8;
             }
 
-            push(stack, computeHash(Game, Turn));
+            push(stack, computeHash(&newGame, !Turn));
             
             eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, stack);
             

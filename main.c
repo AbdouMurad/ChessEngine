@@ -144,8 +144,8 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    setupBlankGame(&Game);
-    //setupGame(&Game);
+    //setupBlankGame(&Game);
+    setupGame(&Game);
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
@@ -173,21 +173,21 @@ int main(){
                 move = moves.moves[0];
             }
             makeMove(&Game, &move, White, &stack);
-            printf("here:%lld %d\n", computeHash(&Game, Turn), x);
-            push(&stack, computeHash(&Game, White));
+            
+            push(&stack, computeHash(&Game, Black));
             printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
             printf("%d %d \n", move.start, move.end);
             PrintBoard(&Game, move.start, move.end);
-            if (search(&stack, computeHash(&Game, Turn)) == 3) break;
+            if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }
         else {
             printf("_______________________________________________________\n");
             struct Move Input;
             moveInput(&Game, &Input, Black);
             makeMove(&Game, &Input, Black, &stack);
-            push(&stack, computeHash(&Game, Black));
+            push(&stack, computeHash(&Game, White));
             PrintBoard(&Game, Input.start, Input.end);
-            if (search(&stack, computeHash(&Game, Turn)) == 3) break;
+            if (search(&stack, computeHash(&Game, White)) == 3) break;
             printf("Move Count: %d\n", stack.pointer);
         }
         Turn = !Turn;
