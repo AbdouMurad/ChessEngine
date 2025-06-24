@@ -165,7 +165,7 @@ int main(){
             move.end = -1;
 
             set_Nodes(0);
-            int eval = alphabeta(DEPTH, &Game, White, -INF, INF, 1, &move, ttTable, &stack);
+            int eval = alphabeta(DEPTH, &Game, -INF, INF, 1, &move, ttTable, &stack);
             
             if (move.start == -1) {
                 struct MoveList moves;

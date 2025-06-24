@@ -1236,37 +1236,37 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     if (turn == White){
         if (position/8 < 7){
             long long int PossiblePawn = 0b0ULL;
-            if (position % 8 > 0) PossiblePawn += (Game->game[turn][King] << 7);
-            if (position % 8 < 7) PossiblePawn += (Game->game[turn][King] << 9);
+            if (position % 8 > 0) PossiblePawn += (1ULL << 7 + position);
+            if (position % 8 < 7) PossiblePawn += (1ULL << 9 + position);
             if (PossiblePawn & Game->game[!turn][Pawn]) return 1;
         }
     }
     else {
         if (position/8 > 0){
             long long int PossiblePawn = 0b0ULL;
-            if (position % 8 > 0) PossiblePawn += (Game->game[turn][King] >> 7);
-            if (position % 8 < 7) PossiblePawn += (Game->game[turn][King] >> 9);
+            if (position % 8 > 0) PossiblePawn += (1ULL << position - 7);
+            if (position % 8 < 7) PossiblePawn += (1ULL << position - 9);
             if (PossiblePawn & Game->game[!turn][Pawn]) return 1;
         }
     }
     //check for knight attakcs
     if (position/8 < 7) {
         long long int possibleKnight = 0b0ULL;
-        if (position % 8 > 1) possibleKnight += (Game->game[turn][King] << 10);
-        if (position % 8 < 6) possibleKnight += (Game->game[turn][King] << 6);
+        if (position % 8 < 6) possibleKnight += (1ULL << position + 10);
+        if (position % 8 > 1) possibleKnight += (1ULL << position + 6);
         if (position/8 < 6) {
-            if (position % 8 > 0) possibleKnight += (Game->game[turn][King] << 17);
-            if (position % 8 < 7) possibleKnight += (Game->game[turn][King] << 15);
+            if (position % 8 > 0) possibleKnight += (1ULL << position + 17);
+            if (position % 8 < 7) possibleKnight += (1ULL << position + 15);
         }
         if (possibleKnight & Game->game[!turn][Knight]) return 1;
     }
     if (position/8 > 0) {
         long long int possibleKnight = 0b0ULL;
-        if (position % 8 > 1) possibleKnight += (Game->game[turn][King] >> 10);
-        if (position % 8 < 6) possibleKnight += (Game->game[turn][King] >> 6);
+        if (position % 8 > 1) possibleKnight += (1ULL << position - 10);
+        if (position % 8 < 6) possibleKnight += (1ULL << position - 6);
         if (position/8 > 1){
-            if (position % 8 > 0) possibleKnight += (Game->game[turn][King] >> 17);
-            if (position % 8 < 7) possibleKnight += (Game->game[turn][King] >> 15);
+            if (position % 8 > 0) possibleKnight += (1ULL << position - 17);
+            if (position % 8 < 7) possibleKnight += (1ULL << position - 15);
         }
         if (possibleKnight & Game->game[!turn][Knight]) return 1;
     }
@@ -1297,48 +1297,48 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     }
 
     //Check Vertical Up
-    for (long long int current = Game->game[turn][King] << 8; __builtin_ctzll(current)/8 < 8; current = current << 8) {
+    for (long long int current = 1ULL << position + 8; __builtin_ctzll(current)/8 < 8; current = current << 8) {
         if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
         if (current & AllBitBoard(Game)) break;
     }
 
     //Check Vertival Down
-    for (long long int current = Game->game[turn][King] >> 8; current != 0; current = current >> 8) {
+    for (long long int current = 1ULL << position - 8; current != 0; current = current >> 8) {
         if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
         if (current & AllBitBoard(Game)) break;
     }
 
     //Check Horizontal Left
-    for (long long int current = Game->game[turn][King] << 1; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0; current = current << 1) {
+    for (long long int current = 1ULL << position + 1; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0; current = current << 1) {
         if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
         if (current & AllBitBoard(Game)) break;
     }
     //Check Horizontal Right
-    for (long long int current = Game->game[turn][King] >> 1; __builtin_ctzll(current)%8 >= 0 && current != 0 && __builtin_ctzll(current)%8 < 7; current = current >> 1) {
+    for (long long int current = 1ULL << position - 1; __builtin_ctzll(current)%8 >= 0 && current != 0 && __builtin_ctzll(current)%8 < 7; current = current >> 1) {
         if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
         if (current & AllBitBoard(Game)) break;
     }
 
     //Check Diagonal Top left
-    for (long long int current = Game->game[turn][King] << 9; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && __builtin_ctzll(current)/8 < 8; current = current << 9){
+    for (long long int current = 1ULL << position + 9; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && __builtin_ctzll(current)/8 < 8; current = current << 9){
         if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
         if (current & AllBitBoard(Game)) break; 
     }
 
     //Check Diagonal Top Right
-    for (long long int current = Game->game[turn][King] << 7; __builtin_ctzll(current)%8 < 7 && __builtin_ctzll(current)/8 < 8; current = current << 7) {
+    for (long long int current = 1ULL << position + 7; __builtin_ctzll(current)%8 < 7 && __builtin_ctzll(current)/8 < 8; current = current << 7) {
         if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
         if (current & AllBitBoard(Game)) break; 
     }
 
     //Check Diagonal Bottom Left
-    for (long long int current = Game->game[turn][King] >> 7; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && current != 0; current = current >> 7){
+    for (long long int current = 1ULL << position - 7; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && current != 0; current = current >> 7){
         if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
         if (current & AllBitBoard(Game)) break; 
     }
 
     //Check Diagonal Bottom Right
-    for (long long int current = Game->game[turn][King] >> 9; __builtin_ctzll(current)%8 < 7 && current != 0; current = current >> 9){
+    for (long long int current = 1ULL << position - 9; __builtin_ctzll(current)%8 < 7 && current != 0; current = current >> 9){
         if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
         if (current & AllBitBoard(Game)) break; 
     }
@@ -1709,7 +1709,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                 }
             }
         }
-        if (piece == Bishop || piece == Queen || piece == King) {
+        if (piece == Bishop || piece == Queen) {
             currentPiece = Game->game[color][piece];
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
@@ -1813,17 +1813,16 @@ void set_Nodes(int i) {
     Nodes = i;
 }
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
-int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
+int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
     Nodes += 1;
     unsigned long long int hash = computeHash(Game, !maximizingPlayer);
-    int x = gameOver(Turn, Game);
+    int x = gameOver(!maximizingPlayer, Game);
     if (search(stack, hash) >= 2) return 0;
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
-        if (maximizingPlayer) return -INF + (DEPTH*100 - depth*100);
+        if (maximizingPlayer) return -INF + (DEPTH - depth);
         else {
-            printf("%d %d\n", INF - (DEPTH*100 - depth*100), depth);
-            return INF - (DEPTH *100 - depth*100);
+            return INF - (DEPTH - depth);
         }
     }
 
@@ -1833,6 +1832,7 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     if (depth == 0) return evaluate(Game, !maximizingPlayer);
 
     struct TTEntry *entry = probe(hash, table);
+    
     if (entry && entry->depth >= depth) {
         if (entry->flag == EXACT) {
             if (depth == DEPTH) *Move = entry->BestMove;
@@ -1853,9 +1853,8 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
     int originalAlpha = alpha, originalBeta = beta;
 
     struct MoveList moves;
-    generateMoves(Game, &moves, !max);
+    generateMoves(Game, &moves, !maximizingPlayer);
     InsertSort(moves.moves, moves.count);
-
     
     //Maximizing Player
     if (maximizingPlayer) {
@@ -1865,78 +1864,44 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
         for (int i = 0; i < moves.count; ++i) {
             newGame = *Game;
             move = moves.moves[i];
-            
             //apply move
             int removed = CheckCollision((1ULL << move.end), Game, &newGame);
             newGame.game[White][move.piece] ^= (1ULL << move.start);
             newGame.game[White][move.piece] |= (1ULL << move.end);
             if (removed - 1 == Rook) {
-                if (Turn == White && move.end == 63) {
-                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
-                    else newGame.BlackCastle = Neither;
-                }
-                else if (Turn == White && move.end == 56) {
-                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
-                    else newGame.BlackCastle = Neither;
-                }
-                else if (Turn == Black && move.end == 7) {
+                if (move.end == 7) {
                     if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                     else newGame.WhiteCastle = Neither;
                 }
-                else if (Turn == Black && move.end == 0) {
+                else if (move.end == 0) {
                     if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
                     else newGame.WhiteCastle = Neither; 
                 }
             }
 
             //check for promotion
-            if (move.piece == Pawn && (move.end/8 == 7 - 7*Turn)) {
-                newGame.game[Turn][Pawn] ^= (1ULL << move.end);
-                newGame.game[Turn][move.promotion] |= (1ULL << move.end);
+            if (move.piece == Pawn && (move.end/8 == 7)) {
+                newGame.game[White][Pawn] ^= (1ULL << move.end);
+                newGame.game[White][move.promotion] |= (1ULL << move.end);
             }
             
             
             //check for castle
             if (move.piece == King && abs(move.start - move.end) == 2) {
-                if (Turn == White) {
-                    newGame.WhiteCastle = Neither;
-                    if (move.end == 5) {
-                        newGame.game[White][Rook] ^= (1ULL << 7);
-                        newGame.game[White][Rook] |= (1ULL << 4);
-                    }
-                    else {
-                        newGame.game[White][Rook] ^= (1ULL);
-                        newGame.game[White][Rook] |= (1ULL << 2);
-                    }
+                newGame.WhiteCastle = Neither;
+                if (move.end == 5) {
+                    newGame.game[White][Rook] ^= (1ULL << 7);
+                    newGame.game[White][Rook] |= (1ULL << 4);
                 }
                 else {
-                    newGame.BlackCastle = Neither;
-                    if (move.end == 61) {
-                        newGame.game[Black][Rook] ^= (1ULL << 63);
-                        newGame.game[Black][Rook] |= (1ULL << 60);
-                    }
-                    else {
-                        newGame.game[Black][Rook] ^= (1ULL << 56);
-                        newGame.game[Black][Rook] |= (1ULL << 58);
-                    }
-                }
+                    newGame.game[White][Rook] ^= (1ULL);
+                    newGame.game[White][Rook] |= (1ULL << 2);
+                }  
             }
-            else if (move.piece == King) {
-                if (Turn == White) newGame.WhiteCastle = Neither;
-                else newGame.BlackCastle = Neither;
-            }
+            else if (move.piece == King) newGame.WhiteCastle = Neither;
+
             if (move.piece == Rook) {
-                if (Turn == White && Game->WhiteCastle != Neither) {
-                    if (move.start == 0) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
-                        else newGame.WhiteCastle = Neither;
-                    }
-                    else if (move.start == 7) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
-                        else newGame.WhiteCastle = Neither;
-                    }
-                }
-                else if (Turn == Black && Game->BlackCastle != Neither){
+                if (Game->WhiteCastle != Neither) {
                     if (move.start == 63) {
                         if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
                         else newGame.BlackCastle = Neither;
@@ -1949,23 +1914,22 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             }
 
             //en passant
-            if (Game->enPassant[!Turn] < 8 && move.start == (4 - Turn) && move.end % 8 == Game->enPassant[!Turn] && move.piece == Pawn) {
-                newGame.game[!Turn][Pawn] ^= 1ULL << move.end - 8 + 16*Turn;
+            if (Game->enPassant[Black] < 8 && move.start == 4 && move.end % 8 == Game->enPassant[Black] && move.piece == Pawn) {
+                newGame.game[Black][Pawn] ^= 1ULL << move.end - 8;
             }
 
             //reset enPassant
-            newGame.enPassant[White] = 8;
             newGame.enPassant[Black] = 8;
 
             //check for new enPassant flag
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
-                newGame.enPassant[Turn] = move.end % 8;
+                newGame.enPassant[White] = move.end % 8;
             }
 
-            push(stack, computeHash(&newGame, !Turn));
+            push(stack, computeHash(&newGame, Black));
             
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 0, Move, table, stack);
-
+            eval = alphabeta(depth-1, &newGame, alpha, beta, 0, Move, table, stack);
+            if (move.start == 63 && move.end == 62 && depth == DEPTH) printf("heerereree %d\n", eval);
             pop(stack);
 
             if (eval > maxEval) {
@@ -1994,72 +1958,39 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
 
 
             int removed = CheckCollision((1ULL << move.end), Game, &newGame);
-            newGame.game[Turn][move.piece] ^= (1ULL << move.start);
-            newGame.game[Turn][move.piece] |= (1ULL << move.end);
+            newGame.game[Black][move.piece] ^= (1ULL << move.start);
+            newGame.game[Black][move.piece] |= (1ULL << move.end);
             if (removed - 1 == Rook) {
-                if (Turn == White && move.end == 63) {
-                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
-                    else newGame.BlackCastle = Neither;
-                }
-                else if (Turn == White && move.end == 56) {
-                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
-                    else newGame.BlackCastle = Neither;
-                }
-                else if (Turn == Black && move.end == 7) {
+                if (move.end == 7) {
                     if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                     else newGame.WhiteCastle = Neither;
                 }
-                else if (Turn == Black && move.end == 0) {
+                if (move.end == 0) {
                     if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
                     else newGame.WhiteCastle = Neither; 
                 }
             }
             //Check promotion
-            if (move.piece == Pawn && (move.end/8 == 7 - 7*Turn)) {
-                newGame.game[Turn][Pawn] ^= (1ULL << move.end);
-                newGame.game[Turn][move.promotion] |= (1ULL << move.end);
+            if (move.piece == Pawn && (move.end/8 == 0)) {
+                newGame.game[Black][Pawn] ^= (1ULL << move.end);
+                newGame.game[Black][move.promotion] |= (1ULL << move.end);
             }
             //check for castle
-            if (move.piece == King && abs(move.start - move.end) == 2) {
-                if (Turn == White) {
-                    newGame.WhiteCastle = Neither;
-                    if (move.end == 5) {
-                        newGame.game[White][Rook] ^= (1ULL << 7);
-                        newGame.game[White][Rook] |= (1ULL << 4);
-                    }
-                    else {
-                        newGame.game[White][Rook] ^= (1ULL);
-                        newGame.game[White][Rook] |= (1ULL << 2);
-                    }
+            if (move.piece == King && abs(move.start - move.end) == 2) {     
+                newGame.BlackCastle = Neither;
+                if (move.end == 61) {
+                    newGame.game[Black][Rook] ^= (1ULL << 63);
+                    newGame.game[Black][Rook] |= (1ULL << 60);
                 }
                 else {
-                    newGame.BlackCastle = Neither;
-                    if (move.end == 61) {
-                        newGame.game[Black][Rook] ^= (1ULL << 63);
-                        newGame.game[Black][Rook] |= (1ULL << 60);
-                    }
-                    else {
-                        newGame.game[Black][Rook] ^= (1ULL << 56);
-                        newGame.game[Black][Rook] |= (1ULL << 58);
-                    }
+                    newGame.game[Black][Rook] ^= (1ULL << 56);
+                    newGame.game[Black][Rook] |= (1ULL << 58);
                 }
             }
-            else if (move.piece == King) {
-                if (Turn == White) newGame.WhiteCastle = Neither;
-                else newGame.BlackCastle = Neither;
-            }
+            else if (move.piece == King) newGame.BlackCastle = Neither;
+        
             if (move.piece == Rook) {
-                if (Turn == White && Game->WhiteCastle != Neither) {
-                    if (move.start == 0) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
-                        else newGame.WhiteCastle = Neither;
-                    }
-                    else if (move.start == 7) {
-                        if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
-                        else newGame.WhiteCastle = Neither;
-                    }
-                }
-                else if (Turn == Black && Game->BlackCastle != Neither){
+                if (Game->BlackCastle != Neither){
                     if (move.start == 63) {
                         if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
                         else newGame.BlackCastle = Neither;
@@ -2072,20 +2003,19 @@ int alphabeta(int depth, struct gameBoard *Game, enum Color Turn, int alpha, int
             }
             
             //en passant
-            if (Game->enPassant[!Turn] < 8 && move.start == 4 - Turn && move.end % 8 == Game->enPassant[!Turn] && move.piece == Pawn) {
-                newGame.game[!Turn][Pawn] ^= 1ULL << move.end - 8 + 16*Turn;
+            if (Game->enPassant[White] < 8 && move.start == 3 && move.end % 8 == Game->enPassant[White] && move.piece == Pawn) {
+                newGame.game[White][Pawn] ^= 1ULL << move.end + 8;
             }
-
             newGame.enPassant[White] = 8;
-            newGame.enPassant[Black] = 8;
+
 
             if (move.piece == Pawn && abs(move.end - move.start) == 16){
-                newGame.enPassant[Turn] = move.end % 8;
+                newGame.enPassant[Black] = move.end % 8;
             }
 
-            push(stack, computeHash(&newGame, !Turn));
+            push(stack, computeHash(&newGame, White));
             
-            eval = alphabeta(depth-1, &newGame, !Turn, alpha, beta, 1, Move, table, stack);
+            eval = alphabeta(depth-1, &newGame, alpha, beta, 1, Move, table, stack);
             
             pop(stack);
 

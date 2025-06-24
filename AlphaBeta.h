@@ -70,4 +70,4 @@ void set_Nodes(int v);
 
 int search(struct Stack *stack, unsigned long long int value);
 
-int alphabeta(int depth, struct gameBoard *game, enum Color Turn, int alpha, int beta, int maximizingPlayer, struct Move *move, struct TTEntry *table, struct Stack *stack);
+int alphabeta(int depth, struct gameBoard *game, int alpha, int beta, int maximizingPlayer, struct Move *move, struct TTEntry *table, struct Stack *stack);
