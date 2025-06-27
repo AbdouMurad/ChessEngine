@@ -52,9 +52,10 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     }
 }
 void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struct Stack *stack) {
-    CheckCollision(1ULL << Input->start, Game, Game);
-    int removed = CheckCollision(1ULL << Input->end, Game, Game);
+    
+    Game->game[turn][Input->piece] ^= (1ULL << Input->start);
     Game->game[turn][Input->piece] |= (1ULL << Input->end);
+    int removed = CheckCollision(1ULL << Input->end, Game, Game, !turn);
     if (removed) stack->pointer = 0;
     if (Input->piece == Pawn) stack->pointer = 0;
     if (removed - 1 == Rook) {
@@ -144,8 +145,8 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    setupBlankGame(&Game);
-    //setupGame(&Game);
+    //setupBlankGame(&Game);
+    setupGame(&Game);
     
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
@@ -156,6 +157,7 @@ int main(){
     setupStack(&stack);
     int x = 0;
     PrintBoard(&Game, -1, -1);
+
     while (gameOver(Turn, &Game) == Play && search(&stack, computeHash(&Game, Turn)) != 3) {
         if (Turn == White) {
             printf("_______________________________________________________\n");

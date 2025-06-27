@@ -565,6 +565,8 @@ void setupStack(struct Stack *stack) {
 
 void deleteStack(struct Stack *stack) {
     free(stack->stack);
+    stack->pointer = 0;
+    stack->size = 0;
 }
 
 void push(struct Stack *stack, unsigned long long int value) {
@@ -680,7 +682,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if ((color == White && position/8 < 6) || (color == Black && position/8 > 1)) {
                         newGame.game[color][Pawn] ^= 1ULL << position;
                         newGame.game[color][Pawn] |= 1ULL << (position + 7 - 16 * color);
-                        int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 7 - 16 * color, Pawn};
                             move.score = 0;
@@ -696,7 +698,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             enum Piece t = (enum Piece)k;
                             newGame.game[color][Pawn] ^= 1ULL << position;
                             newGame.game[color][Pawn] |= 1ULL << (position + 7 - 16*color);
-                            int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 7 - 16*color, Pawn, t};
                                 move.score = 0;
@@ -714,7 +716,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (position/8 < 6) {
                         newGame.game[color][Pawn] ^= 1ULL << position;
                         newGame.game[color][Pawn] |= 1ULL << (position + 9 - 16 * color);
-                        int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 9 - 16 * color, Pawn};
                             move.score = 0;
@@ -730,7 +732,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             enum Piece t = (enum Piece)k;
                             newGame.game[color][Pawn] ^= 1ULL << position;
                             newGame.game[color][Pawn] |= 1ULL << (position + 9 - 16 * color);
-                            int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 9 - 16 * color, Pawn, t};
                                 move.score = 0;
@@ -756,7 +758,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position + 6)))) {
                         newGame.game[color][piece] ^= 1ULL << position;
                         newGame.game[color][piece] |= 1ULL << (position + 6);
-                        int x = CheckCollision(1ULL << (position + 6), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position + 6), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 6, Knight};
                             move.score = 0;
@@ -770,7 +772,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position + 10)))) {
                         newGame.game[color][piece] ^= 1ULL << position;
                         newGame.game[color][piece] |= 1ULL << (position + 10);
-                        int x = CheckCollision(1ULL << (position + 10), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position + 10), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 10, Knight};
                             move.score = 0;
@@ -786,7 +788,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             
                             newGame.game[color][piece] ^= 1ULL << position;
                             newGame.game[color][piece] |= 1ULL << (position + 15);
-                            int x = CheckCollision(1ULL << (position + 15), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position + 15), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position , position + 15, Knight};
                                 move.score = 0;
@@ -801,7 +803,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             
                             newGame.game[color][piece] ^= 1ULL << position;
                             newGame.game[color][piece] |= 1ULL << (position + 17);
-                            int x = CheckCollision(1ULL << (position + 17), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position + 17), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 17, Knight};
                                 move.score = 0;
@@ -819,7 +821,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
 
                         newGame.game[color][piece] ^= 1ULL << position;
                         newGame.game[color][piece] |= 1ULL << (position - 10);
-                        int x = CheckCollision(1ULL << (position - 10), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position - 10), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position - 10, Knight};
                             move.score = 0;
@@ -833,7 +835,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position - 6)))) {
                         newGame.game[color][piece] ^= 1ULL << position;
                         newGame.game[color][piece] |= 1ULL << (position - 6);
-                        int x = CheckCollision(1ULL << (position - 6), Game, &newGame);
+                        int x = CheckCollision(1ULL << (position - 6), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position - 6, Knight};
                             move.score = 0;
@@ -848,7 +850,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 17)))) {
                             newGame.game[color][piece] ^= 1ULL << position;
                             newGame.game[color][piece] |= 1ULL << (position - 17);
-                            int x = CheckCollision(1ULL << (position - 17), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position - 17), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position , position - 17, Knight};
                                 move.score = 0;
@@ -862,7 +864,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 15)))) {
                             newGame.game[color][piece] ^= 1ULL << position;
                             newGame.game[color][piece] |= 1ULL << (position - 15);
-                            int x = CheckCollision(1ULL << (position - 15), Game, &newGame);
+                            int x = CheckCollision(1ULL << (position - 15), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position - 15, Knight};
                                 move.score = 0;
@@ -886,7 +888,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (ColorBitBoard(Game, color) & (1ULL << (position % 8 + 8*y))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position % 8 + 8*y);
-                    int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position % 8 + 8*y, piece};
                         move.score = 0;
@@ -902,7 +904,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (ColorBitBoard(Game, color) & (1ULL << (position % 8 + 8*y))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position % 8 + 8*y);
-                    int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position % 8 + 8*y, piece};
                         move.score = 0;
@@ -918,7 +920,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (ColorBitBoard(Game, color) & (1ULL << ((position/8) *8 + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << ((position/8) *8 + x);
-                    int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, (position/8) *8 + x, piece};
                         move.score = 0;
@@ -934,7 +936,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     if (ColorBitBoard(Game, color) & (1ULL << ((position/8) *8 + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << ((position/8) *8 + x);
-                    int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, (position/8) *8 + x, piece};
                         move.score = 0;
@@ -953,68 +955,72 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             while (currentPiece) {
                 position = __builtin_ctzll(currentPiece);
                 currentPiece &= currentPiece - 1;
+                //top left
                 for (int y = position/8 + 1, x = position % 8 + 1; x <= 7 && y <= 7; ++x, ++y) {
                     if (ColorBitBoard(Game, color) & (1ULL << (8*y + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (8*y + x);
-                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
                         move.score = 0;
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
-                        newGame = *Game;
                         moves->moves[moves->count++] = move;
                     }
+                    newGame = *Game;
                     if (ColorBitBoard(Game, !color) & (1ULL << (8*y + x))) break;
                 }
+                //top right
                 for (int y = position/8 + 1, x = position % 8 - 1; x >= 0 && y <= 7; --x, ++y) {
                     if (ColorBitBoard(Game, color) & (1ULL << (8*y + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (8*y + x);
-                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
                         move.score = 0;
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
-                        newGame = *Game;
                         moves->moves[moves->count++] = move;
                     }
+                    newGame = *Game;
                     if (ColorBitBoard(Game, !color) & (1ULL << (8*y + x))) break;
                 }
+                //bottom right
                 for (int y = position/8 -1, x = position % 8 - 1; x >= 0 && y >= 0; --x, --y) {
                     if (ColorBitBoard(Game, color) & (1ULL << (8*y + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (8*y + x);
-                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
                         move.score = 0;
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
-                        newGame = *Game;
                         moves->moves[moves->count++] = move;
                     }
+                    newGame = *Game;
                     if (ColorBitBoard(Game, !color) & (1ULL << (8*y + x))) break;
                 }
+                //bottom left
                 for (int y = position/8 - 1, x = position % 8 + 1; x <= 7 && y >= 0; ++x, --y) {
                     if (ColorBitBoard(Game, color) & (1ULL << (8*y + x))) break;
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (8*y + x);
-                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame);
+                    int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
                         move.score = 0;
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
-                        newGame = *Game;
                         moves->moves[moves->count++] = move;
                     }
+                    newGame = *Game;
                     if (ColorBitBoard(Game, !color) & (1ULL << (8*y + x))) break;
                 }
             }
@@ -1029,7 +1035,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (!(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position + 8);
-                    int z = CheckCollision(1ULL << (position + 8), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position + 8), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 8, King};
                         move.score = 0;
@@ -1043,7 +1049,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position + 7);
-                    int z = CheckCollision(1ULL << (position + 7), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position + 7), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 7, King};
                         move.score = 0;
@@ -1057,7 +1063,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position + 9);
-                    int z = CheckCollision(1ULL << (position + 9), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position + 9), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 9, King};
                         move.score = 0;
@@ -1073,7 +1079,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (!(ColorBitBoard(Game, color) & (1ULL << (position - 8)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position - 8);
-                    int z = CheckCollision(1ULL << (position - 8), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position - 8), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position - 8, King};
                         move.score = 0;
@@ -1087,7 +1093,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position -9);
-                    int z = CheckCollision(1ULL << (position -9), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position -9), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -9, King};
                         move.score = 0;
@@ -1101,7 +1107,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                 if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position -7);
-                    int z = CheckCollision(1ULL << (position -7), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position -7), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -7, King};
                         move.score = 0;
@@ -1116,7 +1122,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position -1);
-                    int z = CheckCollision(1ULL << (position -1), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position -1), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -1, King};
                         move.score = 0;
@@ -1130,7 +1136,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
                     newGame.game[color][piece] |= 1ULL << (position +1);
-                    int z = CheckCollision(1ULL << (position + 1), Game, &newGame);
+                    int z = CheckCollision(1ULL << (position + 1), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 1, King};
                         move.score = 0;
@@ -1218,9 +1224,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             newGame = *Game;
                         }
                     }
-                }
-                    
-                
+                }                    
             }
         }
     }
@@ -1232,20 +1236,21 @@ int inCheck(struct gameBoard *Game, enum Color turn) {
 
 int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //check if "turn" color is in check
 {    
+    
     //check for pawn attacks
     if (turn == White){
         if (position/8 < 7){
             long long int PossiblePawn = 0b0ULL;
-            if (position % 8 > 0) PossiblePawn += (1ULL << 7 + position);
-            if (position % 8 < 7) PossiblePawn += (1ULL << 9 + position);
+            if (position % 8 > 0) PossiblePawn |= (1ULL << 7 + position);
+            if (position % 8 < 7) PossiblePawn |= (1ULL << 9 + position);
             if (PossiblePawn & Game->game[!turn][Pawn]) return 1;
         }
     }
     else {
         if (position/8 > 0){
             long long int PossiblePawn = 0b0ULL;
-            if (position % 8 > 0) PossiblePawn += (1ULL << position - 7);
-            if (position % 8 < 7) PossiblePawn += (1ULL << position - 9);
+            if (position % 8 > 0) PossiblePawn |= (1ULL << position - 7);
+            if (position % 8 < 7) PossiblePawn |= (1ULL << position - 9);
             if (PossiblePawn & Game->game[!turn][Pawn]) return 1;
         }
     }
@@ -1295,52 +1300,61 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     if (position % 8 < 7) {
         if ((1ULL << (position + 1)) & Game->game[!turn][King]) return 1;
     }
-
     //Check Vertical Up
-    for (long long int current = 1ULL << position + 8; __builtin_ctzll(current)/8 < 8; current = current << 8) {
-        if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
-        if (current & AllBitBoard(Game)) break;
+
+    for (int current = position + 8; current/8 < 8; current += 8) {
+        long long unsigned int temp = 1ULL << current;
+        if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
+        if (temp & AllBitBoard(Game)) break;
     }
 
     //Check Vertival Down
-    for (long long int current = 1ULL << position - 8; current != 0; current = current >> 8) {
-        if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
-        if (current & AllBitBoard(Game)) break;
+    for (int current = position - 8; current/8 >= 0; current -= 8) {
+        long long unsigned int temp = 1ULL << current;
+        if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
+        if (temp & AllBitBoard(Game)) break;
     }
 
     //Check Horizontal Left
-    for (long long int current = 1ULL << position + 1; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0; current = current << 1) {
-        if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
-        if (current & AllBitBoard(Game)) break;
-    }
-    //Check Horizontal Right
-    for (long long int current = 1ULL << position - 1; __builtin_ctzll(current)%8 >= 0 && current != 0 && __builtin_ctzll(current)%8 < 7; current = current >> 1) {
-        if ((current & Game->game[!turn][Rook]) | (current & Game->game[!turn][Queen])) return 1;
-        if (current & AllBitBoard(Game)) break;
+    for (int current = position + 1; (current - 1) % 8 < 7; current += 1) {
+        long long unsigned int temp = 1ULL << current;
+        if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
+        if (temp & AllBitBoard(Game)) break;
     }
 
+    //Check Horizontal Right
+    for (int current = position - 1; (current + 1) % 8 > 0; current -= 1) {
+        long long unsigned int temp = 1ULL << current;
+        if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
+        if (temp & AllBitBoard(Game)) break;
+    }
+    
     //Check Diagonal Top left
-    for (long long int current = 1ULL << position + 9; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && __builtin_ctzll(current)/8 < 8; current = current << 9){
-        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
-        if (current & AllBitBoard(Game)) break; 
+    for (int current = position + 9; (current - 9) % 8 < 7 && (current - 9)/8 < 7; current += 9){
+        long long unsigned int temp = 1ULL << current;
+        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & temp) return 1;
+        if (temp & AllBitBoard(Game)) break;
     }
 
     //Check Diagonal Top Right
-    for (long long int current = 1ULL << position + 7; __builtin_ctzll(current)%8 < 7 && __builtin_ctzll(current)/8 < 8; current = current << 7) {
-        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
-        if (current & AllBitBoard(Game)) break; 
+    for (int current = position + 7; (current - 7) %8 > 0 && (current - 7)/8 < 7; current += 7) {
+        long long unsigned int temp = 1ULL << current;
+        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & temp) return 1;
+        if (temp & AllBitBoard(Game)) break; 
     }
 
     //Check Diagonal Bottom Left
-    for (long long int current = 1ULL << position - 7; __builtin_ctzll(current)%8 < 8 && __builtin_ctzll(current)%8 > 0 && current != 0; current = current >> 7){
-        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
-        if (current & AllBitBoard(Game)) break; 
+    for (int current = position - 7; (current + 7) %8 < 7 && (current + 7)/8 > 0; current -= 7) {
+        long long unsigned int temp = 1ULL << current;
+        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & temp) return 1;
+        if (temp & AllBitBoard(Game)) break; 
     }
 
     //Check Diagonal Bottom Right
-    for (long long int current = 1ULL << position - 9; __builtin_ctzll(current)%8 < 7 && current != 0; current = current >> 9){
-        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & current) return 1;
-        if (current & AllBitBoard(Game)) break; 
+    for (int current = position - 9; (current + 9) %8 > 0 && (current + 9)/8 > 0; current -= 9) {
+        long long unsigned int temp = 1ULL << current;
+        if ((Game->game[!turn][Bishop] | Game->game[!turn][Queen]) & temp) return 1;
+        if (temp & AllBitBoard(Game)) break; 
     }
     return 0;    
 }
@@ -1432,7 +1446,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position/8 < 7 && position % 8 > 0 && ((1ULL << (position + 9)) & ColorBitBoard(Game, !color))) {
                         tempPiece = Game->game[color][piece];
                         copyGame.game[color][piece] += (1ULL << position + 9) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position + 9), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position + 9), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1447,7 +1461,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position/8 < 7 && position % 8 < 7 && ((1ULL << (position + 7)) & ColorBitBoard(Game, !color))) {
                         tempPiece = Game->game[color][piece];
                         copyGame.game[color][piece] += (1ULL << position + 7) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position + 7), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position + 7), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1497,7 +1511,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position/8 > 0 && position % 8 > 0 && ((1ULL << position - 9) & ColorBitBoard(Game, !color))) {
                         tempPiece = Game->game[color][piece];
                         copyGame.game[color][piece] += (1ULL << position - 9) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position - 9), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position - 9), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1512,7 +1526,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position/8 > 0 && position % 8 < 7 && ((1ULL << (position - 7) & ColorBitBoard(Game, !color)))) {
                         tempPiece = Game->game[color][piece];
                         copyGame.game[color][piece] += (1ULL << position - 7) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position - 7), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position - 7), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1548,7 +1562,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position + 6)))) {
                         tempPiece = Game->game[color][Knight];
                         copyGame.game[color][piece] += (1ULL << position + 6) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position + 6), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position + 6), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1563,7 +1577,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position + 10)))) {
                         tempPiece = Game->game[color][Knight];
                         copyGame.game[color][piece] += (1ULL << position + 10) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position + 10), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position + 10), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1579,7 +1593,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                         if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 15)))) {
                             tempPiece = Game->game[color][Knight];
                             copyGame.game[color][piece] += (1ULL << position + 15) - (1ULL << position);
-                            if (CheckCollision(1ULL << (position + 15), Game, &copyGame)) reset = 1;
+                            if (CheckCollision(1ULL << (position + 15), Game, &copyGame, !color)) reset = 1;
                             if (!inCheck(&copyGame, color)) {
                                 return 1;
                             }
@@ -1594,7 +1608,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                         if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 17)))) {
                             tempPiece = Game->game[color][Knight];
                             copyGame.game[color][piece] += (1ULL << position + 17) - (1ULL << position);
-                            if (CheckCollision(1ULL << (position + 17), Game, &copyGame)) reset = 1;
+                            if (CheckCollision(1ULL << (position + 17), Game, &copyGame, !color)) reset = 1;
                             if (!inCheck(&copyGame, color)) {
                                 return 1;
                             }
@@ -1612,7 +1626,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position % 8 > 1 && !(ColorBitBoard(Game, color) & (1ULL << (position - 10)))) {
                         tempPiece = Game->game[color][Knight];
                         copyGame.game[color][piece] += (1ULL << position - 10) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position - 10), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position - 10), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1627,7 +1641,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                     if (position % 8 < 6 && !(ColorBitBoard(Game, color) & (1ULL << (position - 6)))) {
                         tempPiece = Game->game[color][Knight];
                         copyGame.game[color][piece] += (1ULL << position - 6) - (1ULL << position);
-                        if (CheckCollision(1ULL << (position - 6), Game, &copyGame)) reset = 1;
+                        if (CheckCollision(1ULL << (position - 6), Game, &copyGame, !color)) reset = 1;
                         if (!inCheck(&copyGame, color)) {
                             return 1;
                         }
@@ -1643,7 +1657,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                         if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 17)))) {
                             tempPiece = Game->game[color][Knight];
                             copyGame.game[color][piece] += (1ULL << position - 17) - (1ULL << position);
-                            if (CheckCollision(1ULL << (position - 17), Game, &copyGame)) reset = 1;
+                            if (CheckCollision(1ULL << (position - 17), Game, &copyGame, !color)) reset = 1;
                             if (!inCheck(&copyGame, color)) {
                                 return 1;
                             }
@@ -1658,7 +1672,7 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                         if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 15)))) {
                             tempPiece = Game->game[color][Knight];
                             copyGame.game[color][piece] += (1ULL << position - 15) - (1ULL << position);
-                            if (CheckCollision(1ULL << (position - 15), Game, &copyGame)) reset = 1;
+                            if (CheckCollision(1ULL << (position - 15), Game, &copyGame, !color)) reset = 1;
                             if (!inCheck(&copyGame, color)) {
                                 return 1;
                             }
@@ -1681,28 +1695,28 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                 currentPiece &= currentPiece - 1;
                 for (int x = position % 8,  y = position/8 + 1; y <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8,  y = position/8 - 1; y >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8 - 1, y = position/8; x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8 + 1, y = position/8; x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
@@ -1716,28 +1730,28 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
                 currentPiece &= currentPiece - 1;
                 for (int x = position % 8 + 1,  y = position/8 + 1; y <= 7 && x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, ++x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8 - 1,  y = position/8 + 1; y <= 7 && x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); ++y, --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8 - 1,  y = position/8 - 1; y >= 0 && x >= 0 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, --x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
                 }
                 for (int x = position % 8 + 1,  y = position/8 - 1; y >= 0 && x <= 7 && !(ColorBitBoard(Game, color) & (1ULL << (8*y + x))); --y, ++x) {
                     copyGame.game[color][piece] += (1ULL << 8*y + x) - (1ULL << position);
-                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame);
+                    int t = CheckCollision(1ULL << (8*y + x), Game, &copyGame, !color);
                     if (!inCheck(&copyGame, color)) return 1;
                     copyGame = *Game;
                     if (t) break;
@@ -1748,49 +1762,49 @@ int MoreMoves(struct gameBoard *Game, enum Color color) {
             position = __builtin_ctzll(Game->game[color][King]);
             if (position/8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
                 copyGame.game[color][piece] += (1ULL << position + 8) - (1ULL << position);
-                CheckCollision(1ULL << (position + 8), Game, &copyGame);
+                CheckCollision(1ULL << (position + 8), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position/8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 8)))){
                 copyGame.game[color][piece] += (1ULL << position - 8) - (1ULL << position);
-                CheckCollision(1ULL << (position - 8), Game, &copyGame);
+                CheckCollision(1ULL << (position - 8), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 1)))){
                 copyGame.game[color][piece] += (1ULL << position - 1) - (1ULL << position);
-                CheckCollision(1ULL << (position - 1), Game, &copyGame);
+                CheckCollision(1ULL << (position - 1), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 1)))){     
                 copyGame.game[color][piece] += (1ULL << position + 1) - (1ULL << position);
-                CheckCollision(1ULL << (position + 1), Game, &copyGame);
+                CheckCollision(1ULL << (position + 1), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position/8 < 7 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position + 9)))){
                 copyGame.game[color][piece] += (1ULL << position + 9) - (1ULL << position);
-                CheckCollision(1ULL << (position + 9), Game, &copyGame);
+                CheckCollision(1ULL << (position + 9), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position/8 < 7 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position + 7)))){
                 copyGame.game[color][piece] += (1ULL << position + 7) - (1ULL << position);
-                CheckCollision(1ULL << (position + 7), Game, &copyGame);
+                CheckCollision(1ULL << (position + 7), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position/8 > 0 && position % 8 > 0 && !(ColorBitBoard(Game, color) & (1ULL << (position - 9)))){
                 copyGame.game[color][piece] += (1ULL << position - 9) - (1ULL << position);
-                CheckCollision(1ULL << (position - 9), Game, &copyGame);
+                CheckCollision(1ULL << (position - 9), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
             if (position/8 > 0 && position % 8 < 7 && !(ColorBitBoard(Game, color) & (1ULL << (position - 7)))){
                 copyGame.game[color][piece] += (1ULL << position - 7) - (1ULL << position);
-                CheckCollision(1ULL << (position - 7), Game, &copyGame);
+                CheckCollision(1ULL << (position - 7), Game, &copyGame, !color);
                 if (!inCheck(&copyGame, color)) return 1;
                 copyGame = *Game;
             }
@@ -1826,9 +1840,6 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
         }
     }
 
-    //push(stack, hash);
-    //if (search(stack, hash) == 3) return 0;
-    
     if (depth == 0) return evaluate(Game, !maximizingPlayer);
 
     struct TTEntry *entry = probe(hash, table);
@@ -1848,7 +1859,6 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
         }
     }
     struct Move BestMove;
-    long long int TempPiece;
     int eval;
     int originalAlpha = alpha, originalBeta = beta;
 
@@ -1865,17 +1875,19 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             newGame = *Game;
             move = moves.moves[i];
             //apply move
-            int removed = CheckCollision((1ULL << move.end), Game, &newGame);
+            
             newGame.game[White][move.piece] ^= (1ULL << move.start);
             newGame.game[White][move.piece] |= (1ULL << move.end);
-            if (removed - 1 == Rook) {
-                if (move.end == 7) {
-                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
-                    else newGame.WhiteCastle = Neither;
+            
+            //if we captured a rook
+            if (CheckCollision((1ULL << move.end), &newGame, &newGame, maximizingPlayer) - 1 == Rook) {
+                if (move.end == 56) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
+                    else newGame.BlackCastle = Neither;
                 }
-                else if (move.end == 0) {
-                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
-                    else newGame.WhiteCastle = Neither; 
+                else if (move.end == 63) {
+                    if (Game->BlackCastle == WhiteBoth) newGame.BlackCastle = BlackKing;
+                    else newGame.BlackCastle = Neither; 
                 }
             }
 
@@ -1899,18 +1911,17 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
                 }  
             }
             else if (move.piece == King) newGame.WhiteCastle = Neither;
-
-            if (move.piece == Rook) {
-                if (Game->WhiteCastle != Neither) {
-                    if (move.start == 63) {
-                        if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
-                        else newGame.BlackCastle = Neither;
-                    }
-                    else if (move.start == 56) {
-                        if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
-                        else newGame.BlackCastle = Neither;
-                    }
-                } 
+            
+            //update castle status for rook move
+            if (move.piece == Rook && Game->WhiteCastle != Neither) {
+                if (move.start == 0) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
+                    else newGame.WhiteCastle = Neither;
+                }
+                else if (move.start == 7) {
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
+                    else newGame.WhiteCastle = Neither;
+                }
             }
 
             //en passant
@@ -1929,7 +1940,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             push(stack, computeHash(&newGame, Black));
             
             eval = alphabeta(depth-1, &newGame, alpha, beta, 0, Move, table, stack);
-            if (move.start == 63 && move.end == 62 && depth == DEPTH) printf("heerereree %d\n", eval);
+
             pop(stack);
 
             if (eval > maxEval) {
@@ -1956,11 +1967,11 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             newGame = *Game;
             move = moves.moves[i];
 
-
-            int removed = CheckCollision((1ULL << move.end), Game, &newGame);
             newGame.game[Black][move.piece] ^= (1ULL << move.start);
             newGame.game[Black][move.piece] |= (1ULL << move.end);
-            if (removed - 1 == Rook) {
+            
+            //if we captured a rook
+            if (CheckCollision((1ULL << move.end), &newGame, &newGame, maximizingPlayer) - 1 == Rook) {
                 if (move.end == 7) {
                     if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                     else newGame.WhiteCastle = Neither;
@@ -1970,6 +1981,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
                     else newGame.WhiteCastle = Neither; 
                 }
             }
+            
             //Check promotion
             if (move.piece == Pawn && (move.end/8 == 0)) {
                 newGame.game[Black][Pawn] ^= (1ULL << move.end);
@@ -1989,16 +2001,14 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             }
             else if (move.piece == King) newGame.BlackCastle = Neither;
         
-            if (move.piece == Rook) {
-                if (Game->BlackCastle != Neither){
-                    if (move.start == 63) {
-                        if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
-                        else newGame.BlackCastle = Neither;
-                    }
-                    else if (move.start == 56) {
-                        if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
-                        else newGame.BlackCastle = Neither;
-                    }
+            if (move.piece == Rook && Game->BlackCastle != Neither) {
+                if (move.start == 63) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackKing;
+                    else newGame.BlackCastle = Neither;
+                }
+                else if (move.start == 56) {
+                    if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
+                    else newGame.BlackCastle = Neither;
                 } 
             }
             

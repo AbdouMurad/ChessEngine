@@ -35,7 +35,9 @@ unsigned long long int ColorBitBoard(struct gameBoard *Game, enum Color color);
 
 unsigned long long int AllBitBoard(struct gameBoard *Game);
 
-int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,struct gameBoard *newGame);
+//int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,struct gameBoard *newGame);
+
+int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  struct gameBoard *newGame, enum Color Turn);
 
 void PrintBoard(struct gameBoard *Game, int start, int end);
 

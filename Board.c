@@ -143,10 +143,10 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b10000000ULL << 32 |  // Row 4
-    0b00010000ULL << 24 |  // Row 5
-    0b01100000ULL << 16 |  // Row 6
-    0b00000000ULL << 8  |  // Row 7
+    0b00000000ULL << 32 |  // Row 4
+    0b00001000ULL << 24 |  // Row 5
+    0b00000100ULL << 16 |  // Row 6
+    0b10100011ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[White][Knight] =
     0b00000000ULL << 56 |  // Row 1
@@ -162,7 +162,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000000ULL << 24 |  // Row 5
+    0b00100000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
@@ -171,10 +171,10 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000100ULL << 24 |  // Row 5
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000000ULL;         // Row 8
+    0b01000001ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1
@@ -192,7 +192,7 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000001ULL << 16 |  // Row 6
+    0b00100000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
     0b00000000ULL;         // Row 8
 
@@ -200,19 +200,19 @@ void setupBlankGame(struct gameBoard *Game)
 
     Game->game[Black][Pawn] =
     0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
-    0b10000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
-    0b00001000ULL << 24 |  // Row 5
+    0b11000011ULL << 48 |  // Row 2
+    0b00001000ULL << 40 |  // Row 3
+    0b00000100ULL << 32 |  // Row 4
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[Black][Knight] =
     0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
+    0b00001000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000001ULL << 24 |  // Row 5
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
     0b00000000ULL;         // Row 8
@@ -222,14 +222,14 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000100ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
     Game->game[Black][Rook] =
-    0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
+    0b00000001ULL << 56 |  // Row 1
+    0b00100000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00000001ULL << 32 |  // Row 4
+    0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
@@ -246,10 +246,10 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL;         // Row 8
 
     Game->game[Black][King] =
-    0b00000000ULL << 56 |  // Row 1
+    0b00100000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b0001000ULL << 32 |  // Row 4
+    0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
@@ -270,6 +270,16 @@ unsigned long long int AllBitBoard(struct gameBoard *Game) {
   return ColorBitBoard(Game, White) | ColorBitBoard(Game, Black);
 }
 
+int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  struct gameBoard *newGame, enum Color Turn) {
+    for (int j = 0; j < 6; ++j) {
+      if (singlePiece & Game->game[Turn][j]) {
+        newGame->game[Turn][j] ^= singlePiece;
+        return j+1;
+      }
+    }
+  return 0;
+}
+/*
 int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  struct gameBoard *newGame) {
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 6; ++j) {
@@ -281,7 +291,7 @@ int CheckCollision(long long unsigned int singlePiece, struct gameBoard *Game,  
   }
   return 0;
 }
-
+*/
 void PrintBoard(struct gameBoard *Game, int start, int end) {
   long long unsigned int current = 1ULL << 63;
   int cur = 0;
