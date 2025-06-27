@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "Board.h"
 #include "AlphaBeta.h"
-
+#include <time.h>
 void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     struct MoveList moves;
     generateMoves(Game, &moves, turn);
@@ -163,12 +163,19 @@ int main(){
             printf("_______________________________________________________\n");
             struct Move move;
 
+            struct timespec start, end;
+
             move.start = -1;
             move.end = -1;
 
             set_Nodes(0);
+
+            clock_gettime(CLOCK_MONOTONIC, &start);
+
             int eval = alphabeta(DEPTH, &Game, -INF, INF, 1, &move, ttTable, &stack);
             
+            clock_gettime(CLOCK_MONOTONIC, &end);
+
             if (move.start == -1) {
                 struct MoveList moves;
                 generateMoves(&Game, &moves, White);
@@ -179,6 +186,8 @@ int main(){
             push(&stack, computeHash(&Game, Black));
             printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
             printf("%d %d \n", move.start, move.end);
+            double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
+            printf("Delta time per 100,000 nodes: %f seconds\n", (delta_time/get_Nodes())*100000);
             PrintBoard(&Game, move.start, move.end);
             if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }

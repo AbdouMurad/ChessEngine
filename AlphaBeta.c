@@ -346,7 +346,8 @@ int *egPst[6] = {
 };
 
 //old psts
-/*{
+/*
+{
 int eg_pawn_table[64] = {
       0,   0,   0,   0,   0,   0,   0,   0,
     178, 173, 158, 134, 147, 132, 165, 187,
@@ -1873,14 +1874,16 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
         struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i) {
             newGame = *Game;
+
             move = moves.moves[i];
             //apply move
             
             newGame.game[White][move.piece] ^= (1ULL << move.start);
             newGame.game[White][move.piece] |= (1ULL << move.end);
-            
+
+            int captured = CheckCollision((1ULL << move.end), &newGame, &newGame, maximizingPlayer);            
             //if we captured a rook
-            if (CheckCollision((1ULL << move.end), &newGame, &newGame, maximizingPlayer) - 1 == Rook) {
+            if (captured - 1 == Rook) {
                 if (move.end == 56) {
                     if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
                     else newGame.BlackCastle = Neither;
@@ -1942,6 +1945,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             eval = alphabeta(depth-1, &newGame, alpha, beta, 0, Move, table, stack);
 
             pop(stack);
+
 
             if (eval > maxEval) {
                 maxEval = eval;
