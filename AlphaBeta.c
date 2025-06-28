@@ -559,7 +559,7 @@ void printMoves(struct MoveList *moves) {
 }
 
 void setupStack(struct Stack *stack) {
-    stack->size = 32;
+    stack->size = 16;
     stack->stack = malloc(sizeof(unsigned long long int) * stack->size);
     stack->pointer = 0;
 }
@@ -590,9 +590,7 @@ long long unsigned int pop(struct Stack *stack) {
 
 int search(struct Stack *stack, unsigned long long int value) {
     int count = 0;
-    for (int i = 0; i < stack->pointer; ++i) {
-        if (stack->stack[i] == value) count += 1;
-    }
+    for (int i = 0; i < stack->pointer && count < 3; ++i) if (stack->stack[i] == value) count += 1;
     return count;
 }
 //for debug - broken
@@ -612,7 +610,6 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
     moves->count = 0;
     int position = 0;
     long long int currentPiece = 0;
-    long long int tempPiece = 0;
     struct gameBoard newGame = *Game;
     for (int Piece = Queen; Piece >= King; --Piece){
         enum Piece piece = (enum Piece)Piece;
@@ -1027,11 +1024,8 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
             }
         }
         if (piece == King) {
-            tempPiece = Game->game[color][King];
-            position = __builtin_ctzll(tempPiece);
-            if (tempPiece == 0) {
-                continue;
-            }
+            long long unsigned int tempPiece = 0;
+            position = __builtin_ctzll(Game->game[color][King]);
             if (position/8 < 7) {
                 if (!(ColorBitBoard(Game, color) & (1ULL << (position + 8)))) {
                     newGame.game[color][piece] ^= 1ULL << position;
@@ -1237,7 +1231,6 @@ int inCheck(struct gameBoard *Game, enum Color turn) {
 
 int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //check if "turn" color is in check
 {    
-    
     //check for pawn attacks
     if (turn == White){
         if (position/8 < 7){
@@ -1250,11 +1243,12 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     else {
         if (position/8 > 0){
             long long int PossiblePawn = 0b0ULL;
-            if (position % 8 > 0) PossiblePawn |= (1ULL << position - 7);
-            if (position % 8 < 7) PossiblePawn |= (1ULL << position - 9);
+            if (position % 8 > 0) PossiblePawn |= (1ULL << position - 9);
+            if (position % 8 < 7) PossiblePawn |= (1ULL << position - 7);
             if (PossiblePawn & Game->game[!turn][Pawn]) return 1;
         }
     }
+    
     //check for knight attakcs
     if (position/8 < 7) {
         long long int possibleKnight = 0b0ULL;
@@ -1303,19 +1297,18 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     }
     //Check Vertical Up
 
-    for (int current = position + 8; current/8 < 8; current += 8) {
+    for (int current = position + 8; (current - 8)/8 < 7; current += 8) {
         long long unsigned int temp = 1ULL << current;
         if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
         if (temp & AllBitBoard(Game)) break;
     }
-
-    //Check Vertival Down
-    for (int current = position - 8; current/8 >= 0; current -= 8) {
+    //Check Vertival Down - Problem
+    for (int current = position - 8; (current + 8)/8 > 0; current -= 8) {
         long long unsigned int temp = 1ULL << current;
         if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
         if (temp & AllBitBoard(Game)) break;
     }
-
+    
     //Check Horizontal Left
     for (int current = position + 1; (current - 1) % 8 < 7; current += 1) {
         long long unsigned int temp = 1ULL << current;
@@ -1329,7 +1322,7 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
         if ((temp & Game->game[!turn][Rook]) | (temp & Game->game[!turn][Queen])) return 1;
         if (temp & AllBitBoard(Game)) break;
     }
-    
+
     //Check Diagonal Top left
     for (int current = position + 9; (current - 9) % 8 < 7 && (current - 9)/8 < 7; current += 9){
         long long unsigned int temp = 1ULL << current;
@@ -1361,33 +1354,14 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
 }
 
 int Phase(struct gameBoard *Game) {
-    int phase = 0;
-    int coord = 0;
-    unsigned long long int current = 0b0;
-    current = Game->game[White][Queen] | Game->game[Black][Queen];
-    while (current) {
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        phase += 4;
-    }
-    current = Game->game[White][Knight] | Game->game[Black][Knight] | Game->game[White][Bishop] | Game->game[Black][Bishop];
-    while (current) {
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        phase += 1;
-    }
-    current = Game->game[White][Rook] | Game->game[Black][Rook];
-    while (current) {
-        coord = __builtin_ctzll(current);
-        current &= current -1;
-        phase += 2;
-    }
-    return min(phase, 24);
+    return min(4 *  __builtin_popcountll(Game->game[White][Queen] | Game->game[Black][Queen]) +
+        __builtin_popcountll(Game->game[White][Knight] | Game->game[Black][Knight] | Game->game[White][Bishop] | Game->game[Black][Bishop]) +
+        __builtin_popcountll(Game->game[White][Rook] | Game->game[Black][Rook]) * 2 , 24);
 }
 
 int evaluate(struct gameBoard *Game, enum Color turn) {
     int phase = Phase(Game);
-    return (evaluateBoard(Game, mgPst));
+    //return (evaluateBoard(Game, mgPst));
     return (evaluateBoard(Game, mgPst) * phase + evaluateBoard(Game, egPst) * (24 - phase))/24;
 }
 

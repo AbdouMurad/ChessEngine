@@ -145,9 +145,9 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    //setupBlankGame(&Game);
+    setupBlankGame(&Game);
     setupGame(&Game);
-    
+
     //initialize tt table
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
     
@@ -188,6 +188,7 @@ int main(){
             printf("%d %d \n", move.start, move.end);
             double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
             printf("Delta time per 100,000 nodes: %f seconds\n", (delta_time/get_Nodes())*100000);
+            printf("Phase: %d\n", Phase(&Game));
             PrintBoard(&Game, move.start, move.end);
             if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }
