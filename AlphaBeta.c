@@ -5,7 +5,8 @@
 
 const long long unsigned int zobristTable[2][6][64] = {
     {
-        {    0x44705db41c61fbdd,     0xf1f43c0f9d4ac921,     0xd8ea350244679cee,     0x4aea58f17f3fa831,
+        {    
+    0x44705db41c61fbdd,     0xf1f43c0f9d4ac921,     0xd8ea350244679cee,     0x4aea58f17f3fa831,
     0x1a5499fe88ab49bd,     0xa8d16df2b5db4b53,     0x102f6ad2cc6e8b64,     0xbf619f9f28d99e70,
     0xa5a03c9a9b7f284a,     0xb735d8f75b6f5c42,     0xba88a778621ae5ca,     0xd22ad34a806cbe12,
     0x1c8aa39192d3ef28,     0xee9a413c651c6489,     0x20bbfec535183e3b,     0xf2e7014cb5c26fec,
@@ -21,7 +22,8 @@ const long long unsigned int zobristTable[2][6][64] = {
     0x178fca032331660c,     0x899d9d6799708055,     0xb375e0eda37aa379,     0x5c05f8f10609ae10,
     0xa83dd34041ba81f7,     0x0d063b5017b8ab82,     0x6f1a74fc33314480,     0xa66f0e5d1bfb8734,
     0x3565c659fc4a0be1,     0x35d99a5c2cd55bdb,     0x18aa160ee9510882,     0x1e3474f5866e6414},
-        {    0x998c76bea4f51644,     0xaf48734d510a91ec,     0x0799cbd32a60c767,     0xf5c30f3fd99e9ff7,
+        {    
+    0x998c76bea4f51644,     0xaf48734d510a91ec,     0x0799cbd32a60c767,     0xf5c30f3fd99e9ff7,
     0x53c1edf1448d6330,     0xcabf2a880f04fdf9,     0xbd036e7b8e9f874a,     0x63b4ad24c910d649,
     0x971718afac16d90a,     0xecf67160ca5b5429,     0xe31f26dedab86c67,     0x517a0fff06dfdbb5,
     0x034d7e0d0ba07339,     0x835d9629f8354f5e,     0xb22c09a55af2359f,     0xb8027a8184bebe64,
@@ -482,6 +484,7 @@ struct TTEntry *probe(long long unsigned int key, struct TTEntry *table) {
     return NULL;
 }
 
+//store in ttTable
 void store(long long unsigned int key, int depth, int score, int flag, struct Move BestMove, struct TTEntry *table) {
     int index = key % TT_SIZE;
     struct TTEntry *entry = &table[index];
@@ -593,20 +596,9 @@ int search(struct Stack *stack, unsigned long long int value) {
     for (int i = 0; i < stack->pointer && count < 3; ++i) if (stack->stack[i] == value) count += 1;
     return count;
 }
-//for debug - broken
-void printPieceMoves(struct MoveList *moves, enum Piece piece) {
-    printf("Moves: %d \n", moves->count);
-    for (int i = 0; i < moves->count; ++i) {
-        if (i % 3 == 0) printf("\n");
-        if (moves->moves[i].piece != piece) continue;
-        printf("[%d : %d - %d - %d", moves->moves[i].start, moves->moves[i].end, moves->moves[i].piece, moves->moves[i].score);
-        if (moves->moves[i].piece == Pawn && (moves->moves[i].end/8 == 7 | moves->moves[i].end/8 == 0)) printf(" - %d] ", moves->moves[i].promotion);
-        else printf("] ");
-    }
-    printf("\n");
-}
 
 void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color color) {
+    //generate all possible moves for color side
     moves->count = 0;
     int position = 0;
     long long int currentPiece = 0;
@@ -1148,7 +1140,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     //check left castle
                     if (Game->WhiteCastle == WhiteBoth || Game->WhiteCastle == WhiteQueen) {
                         tempPiece = (1ULL << 4) | (1ULL << 5) | (1ULL << 6);
-                        if (!(tempPiece & AllBitBoard(Game)) && !(isSquareAttacked(4, Game, White) || isSquareAttacked(5, Game, White))) {
+                        if (!(tempPiece & AllBitBoard(Game)) && !(isSquareAttacked(4, Game, White) || isSquareAttacked(5, Game, White)) || isSquareAttacked(6, Game, White)) {
                             newGame.game[color][piece] ^= 1ULL << 3;
                             newGame.game[color][piece] |= 1ULL << 5;
                             newGame.game[color][Rook] ^= 1ULL << 7;
@@ -1252,21 +1244,23 @@ int isSquareAttacked(int position, struct gameBoard *Game, enum Color turn) //ch
     //check for knight attakcs
     if (position/8 < 7) {
         long long int possibleKnight = 0b0ULL;
-        if (position % 8 < 6) possibleKnight += (1ULL << position + 10);
-        if (position % 8 > 1) possibleKnight += (1ULL << position + 6);
+        if (position % 8 < 6) possibleKnight |= (1ULL << position + 10);
+        if (position % 8 > 1) possibleKnight |= (1ULL << position + 6);
         if (position/8 < 6) {
-            if (position % 8 > 0) possibleKnight += (1ULL << position + 17);
-            if (position % 8 < 7) possibleKnight += (1ULL << position + 15);
+            
+            if (position % 8 > 0) possibleKnight |= (1ULL << position + 15);
+            
+            if (position % 8 < 7) possibleKnight |= (1ULL << position + 17);
         }
         if (possibleKnight & Game->game[!turn][Knight]) return 1;
     }
     if (position/8 > 0) {
         long long int possibleKnight = 0b0ULL;
-        if (position % 8 > 1) possibleKnight += (1ULL << position - 10);
-        if (position % 8 < 6) possibleKnight += (1ULL << position - 6);
+        if (position % 8 > 1) possibleKnight |= (1ULL << position - 10);
+        if (position % 8 < 6) possibleKnight |= (1ULL << position - 6);
         if (position/8 > 1){
-            if (position % 8 > 0) possibleKnight += (1ULL << position - 17);
-            if (position % 8 < 7) possibleKnight += (1ULL << position - 15);
+            if (position % 8 > 0) possibleKnight |= (1ULL << position - 17);
+            if (position % 8 < 7) possibleKnight |= (1ULL << position - 15);
         }
         if (possibleKnight & Game->game[!turn][Knight]) return 1;
     }
@@ -1388,6 +1382,8 @@ int evaluateBoard(struct gameBoard *Game, int **Pst){
     return score;
 }
 
+
+//check if color side still has legal moves -> used to determine end of game
 int MoreMoves(struct gameBoard *Game, enum Color color) {
     int position = 0;
     long long int currentPiece = 0;
@@ -1889,20 +1885,20 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             }
             else if (move.piece == King) newGame.WhiteCastle = Neither;
             
-            //update castle status for rook move
+            //update castle status for rook move 
             if (move.piece == Rook && Game->WhiteCastle != Neither) {
                 if (move.start == 0) {
-                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
                     else newGame.WhiteCastle = Neither;
                 }
                 else if (move.start == 7) {
-                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteQueen;
+                    if (Game->WhiteCastle == WhiteBoth) newGame.WhiteCastle = WhiteKing;
                     else newGame.WhiteCastle = Neither;
                 }
             }
 
             //en passant
-            if (Game->enPassant[Black] < 8 && move.start == 4 && move.end % 8 == Game->enPassant[Black] && move.piece == Pawn) {
+            if (Game->enPassant[Black] < 8 && move.start/8 == 4 && move.end % 8 == Game->enPassant[Black] && move.piece == Pawn) {
                 newGame.game[Black][Pawn] ^= 1ULL << move.end - 8;
             }
 
@@ -1991,7 +1987,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             }
             
             //en passant
-            if (Game->enPassant[White] < 8 && move.start == 3 && move.end % 8 == Game->enPassant[White] && move.piece == Pawn) {
+            if (Game->enPassant[White] < 8 && move.start/8 == 3 && move.end % 8 == Game->enPassant[White] && move.piece == Pawn) {
                 newGame.game[White][Pawn] ^= 1ULL << move.end + 8;
             }
             newGame.enPassant[White] = 8;

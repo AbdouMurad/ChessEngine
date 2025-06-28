@@ -7,6 +7,92 @@ const char * const BLACK = "\x1b[90m";
 
 const char *current = WHITE;
 
+int fen(struct gameBoard *Game, char *fen) {
+  for (int color = 0; color < 2; color++) {
+        for (int piece = 0; piece < 6; piece++) {
+            Game->game[color][piece] = 0ULL;
+        }
+  }
+  Game->WhiteCastle = Neither;
+  Game->BlackCastle = Neither;
+
+  int pos = 63;
+  int i = 0;
+  for (char c; pos >= 0; ++i) {
+    c = fen[i];
+    if (c >= '1' && c <= '8') {
+    pos -= (c - '0');
+    }
+    else if (c == 'r') {
+      Game->game[Black][Rook] |= 1ULL << pos;
+    }
+    else if (c == 'R') {
+      Game->game[White][Rook] |= 1ULL << pos;
+    }
+    else if (c == 'b') {
+      Game->game[Black][Bishop] |= 1ULL << pos;
+    }
+    else if (c == 'B') {
+      Game->game[White][Bishop] |= 1ULL << pos;
+    }
+    else if (c == 'n') {
+      Game->game[Black][Knight] |= 1ULL << pos;
+    }
+    else if (c == 'N') {
+      Game->game[White][Knight] |= 1ULL << pos;
+    }
+    else if (c == 'q') {
+      Game->game[Black][Queen] |= 1ULL << pos;
+    }
+    else if (c == 'Q') {
+      Game->game[White][Queen] |= 1ULL << pos;
+    }
+    else if (c == 'k') {
+      Game->game[Black][King] |= 1ULL << pos;
+    }
+    else if (c == 'K') {
+      Game->game[White][King] |= 1ULL << pos;
+    }
+    else if (c == 'p') {
+    Game->game[Black][Pawn] |= 1ULL << pos;
+    }
+    else if (c == 'P') {
+        Game->game[White][Pawn] |= 1ULL << pos;
+    }
+    if (c != '/' && !(c >= '1' && c <= '8')) {
+      pos -= 1;
+    }
+  }
+  i += 1;
+  int turn = fen[i] == 'w' ? White : Black;
+
+  i += 2;
+
+  if (fen[i] == '-') {
+        i++;
+  } else {
+        while (fen[i] != ' ') {
+            switch (fen[i]) {
+                case 'K': 
+                  Game->WhiteCastle = Game->WhiteCastle == WhiteQueen ? WhiteBoth : WhiteKing;
+                  break;
+                case 'Q': 
+                  Game->WhiteCastle = Game->WhiteCastle == WhiteKing ? WhiteBoth : WhiteQueen; 
+                  break;
+                case 'k': 
+                  Game->BlackCastle = Game->BlackCastle == BlackQueen ? BlackBoth : BlackKing; 
+                  break;
+                case 'q': 
+                  Game->BlackCastle = Game->BlackCastle == BlackKing ? BlackBoth : BlackQueen; 
+                  break;
+            }
+            i++;
+        }
+  }
+
+  return turn;
+}
+
 void setupGame(struct gameBoard *Game)
 {
     Game->enPassant[White] = 8;
@@ -144,9 +230,9 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000000ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
-    0b10000001ULL << 8  |  // Row 7
+    0b00001000ULL << 24 |  // Row 5
+    0b00000001ULL << 16 |  // Row 6
+    0b00000010ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[White][Knight] =
     0b00000000ULL << 56 |  // Row 1
@@ -167,18 +253,18 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
     Game->game[White][Rook] =
-    0b00000010ULL << 56 |  // Row 1
+    0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
+    0b00100000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x81, for rooks on a1 & h1)
-    0b00000000ULL;         // Row 8
+    0b00001000ULL;         // Row 8
 
     Game->game[White][Queen] =
     0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
+    0b01000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
@@ -192,37 +278,37 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00000000ULL << 16 |  // Row 6
-    0b00000100ULL << 8  |  // Row 7 (0x08)
+    0b10000000ULL << 16 |  // Row 6
+    0b00000000ULL << 8  |  // Row 7 (0x08)
     0b00000000ULL;         // Row 8
 
     // Black Pieces
 
     Game->game[Black][Pawn] =
     0b00000000ULL << 56 |  // Row 1
-    0b00000000ULL << 48 |  // Row 2
-    0b00100000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
+    0b00000001ULL << 48 |  // Row 2
+    0b10000000ULL << 40 |  // Row 3
+    0b00010000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
-    0b00000000ULL << 8  |  // Row 7
+    0b00001000ULL << 8  |  // Row 7
     0b00000000ULL;         // Row 8
     Game->game[Black][Knight] =
     0b00000000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
-    0b00000000ULL << 32 |  // Row 4
+    0b01000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x42, for knights on b1 & g1)
     0b00000000ULL;         // Row 8
     Game->game[Black][Bishop] =
-    0b00000000ULL << 56 |  // Row 1
+    0b00000100ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
     0b00000000ULL << 24 |  // Row 5
-    0b00010000ULL << 16 |  // Row 6
+    0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x24, for bishops on c1 & f1)
     0b00000000ULL;         // Row 8
     Game->game[Black][Rook] =
@@ -243,14 +329,14 @@ void setupBlankGame(struct gameBoard *Game)
     0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x10)
-    0b00100000ULL;         // Row 8
+    0b00000000ULL;         // Row 8
 
     Game->game[Black][King] =
-    0b00000000ULL << 56 |  // Row 1
+    0b00001000ULL << 56 |  // Row 1
     0b00000000ULL << 48 |  // Row 2
     0b00000000ULL << 40 |  // Row 3
     0b00000000ULL << 32 |  // Row 4
-    0b00000001ULL << 24 |  // Row 5
+    0b00000000ULL << 24 |  // Row 5
     0b00000000ULL << 16 |  // Row 6
     0b00000000ULL << 8  |  // Row 7 (0x08)
     0b00000000ULL;         // Row 8

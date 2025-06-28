@@ -25,7 +25,7 @@ struct gameBoard {
     
 };
 
-
+int fen(struct gameBoard *Game, char *fen);
 
 void setupBlankGame(struct gameBoard *Game);
 

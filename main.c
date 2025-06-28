@@ -24,7 +24,6 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         scanf("%d", &i);
         Input->end   = 7 - (c - 'a') + 8*(i-1);
         scanf("%c", &c);
-        printf("%d %d\n", Input->start, Input->end);
         for (int x = 0; x < moves.count; ++x) {
             if (moves.moves[x].start == Input->start && Input->end == moves.moves[x].end) {
                 found = 1;
@@ -52,7 +51,6 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     }
 }
 void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struct Stack *stack) {
-    
     Game->game[turn][Input->piece] ^= (1ULL << Input->start);
     Game->game[turn][Input->piece] |= (1ULL << Input->end);
     int removed = CheckCollision(1ULL << Input->end, Game, Game, !turn);
@@ -145,7 +143,7 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
 
 int main(){
     struct gameBoard Game;
-    setupBlankGame(&Game);
+    //setupBlankGame(&Game);
     setupGame(&Game);
 
     //initialize tt table
@@ -155,7 +153,7 @@ int main(){
 
     struct Stack stack;
     setupStack(&stack);
-    int x = 0;
+
     PrintBoard(&Game, -1, -1);
 
     while (gameOver(Turn, &Game) == Play && search(&stack, computeHash(&Game, Turn)) != 3) {
@@ -185,10 +183,9 @@ int main(){
             
             push(&stack, computeHash(&Game, Black));
             printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
-            printf("%d %d \n", move.start, move.end);
             double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
             printf("Delta time per 100,000 nodes: %f seconds\n", (delta_time/get_Nodes())*100000);
-            printf("Phase: %d\n", Phase(&Game));
+            printf("Phase: %d\n\n", Phase(&Game));
             PrintBoard(&Game, move.start, move.end);
             if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }
