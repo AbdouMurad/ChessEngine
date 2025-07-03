@@ -562,7 +562,7 @@ void printMoves(struct MoveList *moves) {
 }
 
 void setupStack(struct Stack *stack) {
-    stack->size = 16;
+    stack->size = 32;
     stack->stack = malloc(sizeof(unsigned long long int) * stack->size);
     stack->pointer = 0;
 }

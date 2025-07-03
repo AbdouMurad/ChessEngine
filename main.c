@@ -8,9 +8,9 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     struct MoveList moves;
     generateMoves(Game, &moves, turn);
     InsertSort(moves.moves, moves.count);
-    printf("POSSIBLE MOVES: \n");
-    printMoves(&moves);
-    printf("\n");
+    //printf("POSSIBLE MOVES: \n");
+    //printMoves(&moves);
+    //printf("\n");
     int found = 0;
     
     while (1) {
@@ -87,7 +87,7 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
         Game->game[turn][Pawn] ^= (1ULL << Input->end);
         Game->game[turn][Input->promotion] |= (1ULL << Input->end);
     }
-    printf("[%d - %d]\n", Input->start, Input->end);
+    //printf("[%d - %d]\n", Input->start, Input->end);
 
     //apply castle changes
     if (Input->piece == King) {
@@ -182,10 +182,8 @@ int main(){
             makeMove(&Game, &move, White, &stack);
             
             push(&stack, computeHash(&Game, Black));
-            printf("Start: %d End: %d Piece: %d maxEval: %d\nCastle: %d Nodes Explored: %d Move Count: %d\n",move.start,move.end,move.piece, eval, Game.WhiteCastle, get_Nodes(), stack.pointer);
             double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
-            printf("Delta time per 100,000 nodes: %f seconds\n", (delta_time/get_Nodes())*100000);
-            printf("Phase: %d\n\n", Phase(&Game));
+            printf("nps: %d, nodes: %d\n", (int)(get_Nodes()/delta_time), get_Nodes());
             PrintBoard(&Game, move.start, move.end);
             if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }
@@ -197,7 +195,6 @@ int main(){
             push(&stack, computeHash(&Game, White));
             PrintBoard(&Game, Input.start, Input.end);
             if (search(&stack, computeHash(&Game, White)) == 3) break;
-            printf("Move Count: %d\n", stack.pointer);
         }
         Turn = !Turn;
     }
