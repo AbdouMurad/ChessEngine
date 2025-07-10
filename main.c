@@ -4,6 +4,12 @@
 #include "Board.h"
 #include "AlphaBeta.h"
 #include <time.h>
+
+void clear_stdin() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
 void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     struct MoveList moves;
     generateMoves(Game, &moves, turn);
@@ -14,8 +20,9 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     int found = 0;
     
     while (1) {
-        char c;
-        int i;
+        char c = 0;
+        int i = 0;
+        
         printf("Which piece to move?\n");
         scanf("%c", &c);
         scanf("%d", &i);
@@ -24,6 +31,8 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         scanf("%d", &i);
         Input->end   = 7 - (c - 'a') + 8*(i-1);
         scanf("%c", &c);
+        
+        
         for (int x = 0; x < moves.count; ++x) {
             if (moves.moves[x].start == Input->start && Input->end == moves.moves[x].end) {
                 found = 1;
@@ -48,6 +57,7 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         else {
             printf("Try again, invalid move\n");
         }
+        clear_stdin();
     }
 }
 void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struct Stack *stack) {
@@ -59,19 +69,19 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
     if (removed - 1 == Rook) {
         if (turn == White && Input->end == 63) {
             if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackKing;
-            else Game->BlackCastle = Neither;
+            else if (Game->BlackCastle != BlackKing) Game->BlackCastle = Neither;
         }
         else if (turn == White && Input->end == 56) {
             if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackQueen;
-            else Game->BlackCastle = Neither;
+            else if (Game->BlackCastle != BlackQueen) Game->BlackCastle = Neither;
         }
         else if (turn == Black && Input->end == 7) {
             if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteKing;
-            else Game->WhiteCastle = Neither;
+            else if (Game->WhiteCastle != WhiteKing) Game->WhiteCastle = Neither;
         }
         else if (turn == Black && Input->end == 0) {
             if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteQueen;
-            else Game->WhiteCastle = Neither; 
+            else if (Game->WhiteCastle != WhiteQueen) Game->WhiteCastle = Neither; 
         }
     }
     //en passant remove piece
@@ -120,22 +130,23 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
         if (turn == White && Game->WhiteCastle != Neither) {
             if (Input->start == 0) {
                 if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteQueen;
-                else Game->WhiteCastle = Neither;
+                else if (Game->WhiteCastle != WhiteQueen) Game->WhiteCastle = Neither;
             }
             else if (Input->start == 7) {
                 if (Game->WhiteCastle == WhiteBoth) Game->WhiteCastle = WhiteKing;
-                else Game->WhiteCastle = Neither;
+                else if (Game->WhiteCastle != WhiteKing) Game->WhiteCastle = Neither;
             }
         }
         else if (turn == Black && Game->BlackCastle != Neither) {
-            if (Input->start == 63)
+            if (Input->start == 63) {
                 if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackKing;
-                else Game->BlackCastle = Neither;
+                else if (Game->BlackCastle != BlackKing) Game->BlackCastle = Neither;
             }
             else if (Input->start == 56) {
                 if (Game->BlackCastle == BlackBoth) Game->BlackCastle = BlackQueen;
-                else Game->BlackCastle = Neither;
+                else if (Game->BlackCastle != BlackQueen) Game->BlackCastle = Neither;
             }
+        }
     }
 }
 
@@ -155,10 +166,15 @@ int main(){
     setupStack(&stack);
 
     PrintBoard(&Game, -1, -1);
-
-    while (gameOver(Turn, &Game) == Play && search(&stack, computeHash(&Game, Turn)) != 3) {
+    int stalemate = 0;
+    while (gameOver(Turn, &Game) == Play && !stalemate) {
         if (Turn == White) {
             printf("_______________________________________________________\n");
+            if (search(&stack, computeHash(&Game, White)) == 3) 
+            {
+                stalemate = 1; 
+                break;
+            }
             struct Move move;
 
             struct timespec start, end;
@@ -174,6 +190,7 @@ int main(){
             
             clock_gettime(CLOCK_MONOTONIC, &end);
 
+            
             if (move.start == -1) {
                 struct MoveList moves;
                 generateMoves(&Game, &moves, White);
@@ -185,20 +202,23 @@ int main(){
             double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
             printf("nps: %d, nodes: %d\n", (int)(get_Nodes()/delta_time), get_Nodes());
             PrintBoard(&Game, move.start, move.end);
-            if (search(&stack, computeHash(&Game, Black)) == 3) break;
         }
         else {
             printf("_______________________________________________________\n");
+            if (search(&stack, computeHash(&Game, Black)) == 3) 
+            {
+                stalemate = 1;
+                break;
+            }
             struct Move Input;
             moveInput(&Game, &Input, Black);
             makeMove(&Game, &Input, Black, &stack);
             push(&stack, computeHash(&Game, White));
             PrintBoard(&Game, Input.start, Input.end);
-            if (search(&stack, computeHash(&Game, White)) == 3) break;
         }
         Turn = !Turn;
     }
-    if (gameOver(White, &Game) == Stalemate || search(&stack, computeHash(&Game, Turn)) == 3) printf("DRAW - Stalemate\n");
+    if (gameOver(White, &Game) == Stalemate || stalemate) printf("DRAW - Stalemate\n");
     else if (gameOver(White, &Game) == Checkmate) printf("Black Win\n");
     else printf("White Win\n");
     

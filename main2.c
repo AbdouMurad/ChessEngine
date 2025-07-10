@@ -3,14 +3,11 @@
 #include <stdlib.h>
 #include "Board.h"
 #include "AlphaBeta.h"
-#include <string.h>
-#include <stdlib.h>
-
 
 void init_game();
 void set_position_startpos();
 void apply_moves(const char *moves_str);
-char *seach_best_move();
+char *search_best_move();
 
 int GameReady = 0;
 struct gameBoard Game;
@@ -19,9 +16,10 @@ struct TTEntry *ttTable;
 int turn = White;
 
 void init_game() {
-    if (GameReady) {
+    if (!GameReady) {
         free(ttTable);
         deleteStack(&stack);
+        GameReady = 1;
     }
     turn = White;
     setupStack(&stack);
@@ -105,7 +103,7 @@ void makeMove(struct Move *Input, enum Color turn) {
             }
         }
         else if (turn == Black && Game.BlackCastle != Neither) {
-            if (Input->start == 63)
+            if (Input->start == 63) {
                 if (Game.BlackCastle == BlackBoth) Game.BlackCastle = BlackKing;
                 else Game.BlackCastle = Neither;
             }
@@ -113,19 +111,21 @@ void makeMove(struct Move *Input, enum Color turn) {
                 if (Game.BlackCastle == BlackBoth) Game.BlackCastle = BlackQueen;
                 else Game.BlackCastle = Neither;
             }
+        }
     }
 }
 
 void handle_position(char *input) {
     char *ptr = input + 9;  // Skip "position "
     char string[256] = {0};
-    char moves[1024] = {0};
+    char moves[4096] = {0};
     int is_startpos = 0;
 
     // 1. Determine if it's "startpos" or "fen"
     if (strncmp(ptr, "startpos", 8) == 0) {
         is_startpos = 1;
         setupGame(&Game);
+        turn = White;
         ptr += 8;
     } else if (strncmp(ptr, "fen", 3) == 0) {
         ptr += 4;  // skip "fen "
@@ -151,7 +151,8 @@ void handle_position(char *input) {
         // Split moves and apply them one by one
         char *move = strtok(moves, " ");
         while (move) {
-            struct Move Input; 
+            //printf("DEBUG:  1= %s - %d\n", move, move[3]);
+            struct Move Input = {0,0,0}; 
             Input.start = 7 - (move[0] - 'a') + (move[1] - '1') * 8;
             Input.end = 7 - (move[2] - 'a') + (move[3] - '1') * 8;
             
@@ -172,21 +173,23 @@ void handle_position(char *input) {
 
             makeMove(&Input, turn);
             turn = !turn;
-            printf("Parsed move: %s\n", move);
+            //printf("Parsed move: %s\n", move);
             fflush(stdout);
             move = strtok(NULL, " ");
         }
     }
 
-    if (is_startpos)
+    if (is_startpos) {
         printf("Starting from standard position.\n");
+        PrintBoard(&Game, -1, -1);
         fflush(stdout);
+    }
 }
 
 
 
 void uci_loop() {
-    char input[512];
+    char input[1024];
 
     while (fgets(input, sizeof(input), stdin)) {
         // Remove trailing newline
@@ -201,15 +204,23 @@ void uci_loop() {
             printf("readyok\n");
             fflush(stdout);
         } else if (strcmp(input, "ucinewgame") == 0) {
+            GameReady = 0;
             init_game();
-            GameReady = 1;
+            setupGame(&Game);
         } else if (strncmp(input, "position", 8) == 0) {
             handle_position(input);
-        } else if (strncmp(input, "go", 2) == 0) {
+        } 
+        else if (strncmp(input, "print", 7) == 0) {
+            PrintBoard(&Game, -1, -1);
+            fflush(stdout);
+        }
+        else if (strncmp(input, "go", 2) == 0) {
+            
             struct Move BestMove;
+            BestMove.start = -1;
+            BestMove.end = -1;
             if (!GameReady) {
                 init_game();
-                GameReady = 1;
             }
             alphabeta(DEPTH, &Game, -INF, INF, !turn, &BestMove, ttTable, &stack);
             char move[6];
