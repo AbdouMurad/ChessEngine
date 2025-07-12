@@ -6,9 +6,9 @@ A lightweight chess engine written in C with Alpha-Beta pruning, transposition t
 git clone git@github.com:AbdouMurad/Chesster.git
 cd Chesster
 ## Build and Run
-gcc -c main.c AlphaBeta.c Board.c
-gcc -o chesster *.o
-./chesster
+gcc -c main.c AlphaBeta.c Board.c  
+gcc -o chesster *.o  
+./chesster  
 ## Features
 Chess engines work by exploring a game tree, where each node represents a possible board state after a move. The engine searches through these nodes to a certain depth, typically measured in plies (half-moves), to evaluate potential future outcomes. Using algorithms like minimax with optimizations such as alpha-beta pruning, the engine reduces the number of nodes it needs to search while still aiming to find the best move. The engine evaluates each position based on heuristics and selects the move that leads to the most favorable outcome assuming perfect play from both sides. The more efficiently an engine can prune the game tree and skip nodes, the further depth it can explore to find the best move. The node number grows eponentially as depth increases, making optimizations essential for any chess engine. Below are the optimizations that were included in this project. 
 
