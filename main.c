@@ -9,20 +9,15 @@ void clear_stdin() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
-
+//Take input from user -> validate move -> store in Input move struct
 void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
     struct MoveList moves;
     generateMoves(Game, &moves, turn);
     InsertSort(moves.moves, moves.count);
-    //printf("POSSIBLE MOVES: \n");
-    //printMoves(&moves);
-    //printf("\n");
     int found = 0;
-    
     while (1) {
         char c = 0;
         int i = 0;
-        
         printf("Which piece to move?\n");
         scanf("%c", &c);
         scanf("%d", &i);
@@ -31,8 +26,6 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         scanf("%d", &i);
         Input->end   = 7 - (c - 'a') + 8*(i-1);
         scanf("%c", &c);
-        
-        
         for (int x = 0; x < moves.count; ++x) {
             if (moves.moves[x].start == Input->start && Input->end == moves.moves[x].end) {
                 found = 1;
@@ -60,6 +53,7 @@ void moveInput(struct gameBoard *Game, struct Move *Input, enum Color turn){
         clear_stdin();
     }
 }
+//Read move -> apply to Game and update gamestate
 void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struct Stack *stack) {
     Game->game[turn][Input->piece] ^= (1ULL << Input->start);
     Game->game[turn][Input->piece] |= (1ULL << Input->end);
@@ -150,23 +144,22 @@ void makeMove(struct gameBoard *Game, struct Move *Input, enum Color turn, struc
     }
 }
 
-//time to beat: user - 1.003 
-
 int main(){
     struct gameBoard Game;
     //setupBlankGame(&Game);
     setupGame(&Game);
 
-    //initialize tt table
+    //initialize tt table and stack
     struct TTEntry *ttTable = malloc(sizeof(struct TTEntry) * TT_SIZE);
-    
-    enum Color Turn = White;
-
     struct Stack stack;
     setupStack(&stack);
 
+    enum Color Turn = White;
+
     PrintBoard(&Game, -1, -1);
     int stalemate = 0;
+    
+    //Game loop
     while (gameOver(Turn, &Game) == Play && !stalemate) {
         if (Turn == White) {
             printf("_______________________________________________________\n");
@@ -176,31 +169,32 @@ int main(){
                 break;
             }
             struct Move move;
-
-            struct timespec start, end;
-
             move.start = -1;
             move.end = -1;
 
-            set_Nodes(0);
+            struct timespec start, end;
 
-            clock_gettime(CLOCK_MONOTONIC, &start);
+            set_Nodes(0); //node counter
 
-            int eval = alphabeta(DEPTH, &Game, -INF, INF, 1, &move, ttTable, &stack);
+            clock_gettime(CLOCK_MONOTONIC, &start); //start time
+
+            int nmp = 0; //toggle null move pruning -> toggled on and off within alphabeta
+            int eval = alphabeta(DEPTH, &Game, -INF, INF, 1, &move, ttTable, &stack, &nmp);
             
-            clock_gettime(CLOCK_MONOTONIC, &end);
+            clock_gettime(CLOCK_MONOTONIC, &end); //end time
 
-            
-            if (move.start == -1) {
+            if (move.start == -1) { //just in case a invalid move is chosen
                 struct MoveList moves;
                 generateMoves(&Game, &moves, White);
+                printf("ERROR OCCURED - Default Move\n");
                 move = moves.moves[0];
             }
+
             makeMove(&Game, &move, White, &stack);
             
             push(&stack, computeHash(&Game, Black));
             double delta_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
-            printf("nps: %d, nodes: %d\n", (int)(get_Nodes()/delta_time), get_Nodes());
+            printf("nps: %d, nodes: %lld eval: %d\n", (int)(get_Nodes()/delta_time), get_Nodes(), eval);
             PrintBoard(&Game, move.start, move.end);
         }
         else {
@@ -225,14 +219,4 @@ int main(){
     deleteStack(&stack);
     free(ttTable);
     return 0;
-    
-/*
-    int nodes = 0;
-    int eval = alphabeta(DEPTH, &Game, White, -10000000, 10000000, 1, &move, ttTable, &nodes);
-    printf("Start: %d End: %d Piece: %d maxEval: %d More Moves? : %d Nodes Explored: %d\n",move.start,move.end,move.piece, eval, MoreMoves(&Game, White),nodes);
-    PrintBoard(&Game, move.start, move.end);
-    struct MoveList moves;
-    generateMoves(&Game, &moves, White);
-    printMoves(&moves);
-*/
     }

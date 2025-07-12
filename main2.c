@@ -186,8 +186,6 @@ void handle_position(char *input) {
     }
 }
 
-
-
 void uci_loop() {
     char input[1024];
 

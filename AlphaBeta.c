@@ -2,7 +2,7 @@
 #include "Board.h"
 #include <stdio.h>
 #include "AlphaBeta.h"
-
+unsigned long long int Nodes = 0;
 const long long unsigned int zobristTable[2][6][64] = {
     {
         {    
@@ -347,6 +347,17 @@ int *egPst[6] = {
     kingPstEg, pawnPstEg, knightPstEg, bishopPstEg, rookPstEg, queenPstEg 
 };
 
+const int centrality[64] = {
+  0,1,1,2,2,1,1,0,
+  1,2,2,3,3,2,2,1,
+  1,2,3,4,4,3,2,1,
+  2,3,4,5,5,4,3,2,
+  2,3,4,5,5,4,3,2,
+  1,2,3,4,4,3,2,1,
+  1,2,2,3,3,2,2,1,
+  0,1,1,2,2,1,1,0,
+};
+
 //old psts
 /*
 {
@@ -497,6 +508,8 @@ void store(long long unsigned int key, int depth, int score, int flag, struct Mo
     }
 }
 
+
+//create hash -> unique to every game state -> if we have already explored this position before, we shouldnt have to search again
 long long unsigned int computeHash(struct gameBoard *Game, enum Color Turn) {
     long long unsigned int result = 0b0;
     long long unsigned int current;
@@ -561,18 +574,18 @@ void printMoves(struct MoveList *moves) {
     printf("\n");
 }
 
+
+//stack operations
 void setupStack(struct Stack *stack) {
     stack->size = 32;
     stack->stack = malloc(sizeof(unsigned long long int) * stack->size);
     stack->pointer = 0;
 }
-
 void deleteStack(struct Stack *stack) {
     free(stack->stack);
     stack->pointer = 0;
     stack->size = 0;
 }
-
 void push(struct Stack *stack, unsigned long long int value) {
     stack->stack[stack->pointer++] = value;
     if (stack->size == stack->pointer) {
@@ -590,7 +603,6 @@ long long unsigned int pop(struct Stack *stack) {
     
     return stack->stack[stack->pointer--];
 }
-
 int search(struct Stack *stack, unsigned long long int value) {
     int count = 0;
     for (int i = 0; i < stack->pointer && count < 3; ++i) if (stack->stack[i] == value) count += 1;
@@ -618,6 +630,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         newGame.game[!color][Pawn] ^= 1ULL << (position/8 + 1 - 2 * color)*8 + Game->enPassant[!color] - 8 + 16 * color;
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, (position/8 + 1 - 2 * color)*8 + Game->enPassant[!color], piece};
+                            move.score = centrality[position/8 + 1 - 2 * color];
                             move.score = 1000;
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -631,7 +644,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     newGame.game[color][Pawn] |= 1ULL << position + 16 - 32 * color;
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 16 - 32 * color, piece};
-                        move.score = 0;
+                        move.score = centrality[position + 16 - 32 * color];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
                         moves->moves[moves->count++] = move;
@@ -644,7 +657,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         newGame.game[color][Pawn] |= 1ULL << (position + 8 - 16 * color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 8 - 16 * color, Pawn};
-                            move.score = 0;
+                            move.score = centrality[position + 8 - 16 *color];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
                             moves->moves[moves->count++] = move;
@@ -658,7 +671,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             newGame.game[color][k] |= 1ULL << (position + 8 - 16*color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 8 - 16 * color, Pawn, t};
-                                move.score = 0;
+                                move.score = centrality[position + 8 - 16 * color];
                                 move.score += pieceValue[k];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -675,7 +688,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 7 - 16 * color, Pawn};
-                            move.score = 0;
+                            move.score = centrality[position + 7 - 16 * color];
                             move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -691,7 +704,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position + 7 - 16*color), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 7 - 16*color, Pawn, t};
-                                move.score = 0;
+                                move.score = centrality[position + 7 - 16*color];
                                 move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -709,7 +722,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 9 - 16 * color, Pawn};
-                            move.score = 0;
+                            move.score = centrality[position + 9 - 16];
                             move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -725,7 +738,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position + 9 - 16 * color), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 9 - 16 * color, Pawn, t};
-                                move.score = 0;
+                                move.score = centrality[position + 9 - 16 * color];
                                 move.score += pieceValue[x-1] * 10 - pieceValue[Pawn];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -751,7 +764,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position + 6), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 6, Knight};
-                            move.score = 0;
+                            move.score = centrality[position + 6];
                             if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -765,7 +778,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position + 10), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position + 10, Knight};
-                            move.score = 0;
+                            move.score = centrality[position + 10];
                             if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -781,7 +794,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position + 15), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position , position + 15, Knight};
-                                move.score = 0;
+                                move.score = centrality[position + 15];
                                 if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -796,7 +809,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position + 17), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position + 17, Knight};
-                                move.score = 0;
+                                move.score = centrality[position + 17];
                                 if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -814,7 +827,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position - 10), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position - 10, Knight};
-                            move.score = 0;
+                            move.score = centrality[position - 10];
                             if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -828,7 +841,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                         int x = CheckCollision(1ULL << (position - 6), Game, &newGame, !color);
                         if (!inCheck(&newGame, color)) {
                             struct Move move = {position, position - 6, Knight};
-                            move.score = 0;
+                            move.score = centrality[position - 6];
                             if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                             if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                             else if (inCheck(&newGame, !color)) move.score += 200;
@@ -843,7 +856,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position - 17), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position , position - 17, Knight};
-                                move.score = 0;
+                                move.score = centrality[position - 17];
                                 if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -857,7 +870,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                             int x = CheckCollision(1ULL << (position - 15), Game, &newGame, !color);
                             if (!inCheck(&newGame, color)) {
                                 struct Move move = {position, position - 15, Knight};
-                                move.score = 0;
+                                move.score = centrality[position - 15];
                                 if (x) move.score += pieceValue[x-1]*10 - pieceValue[piece];
                                 if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                                 else if (inCheck(&newGame, !color)) move.score += 200;
@@ -881,7 +894,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position % 8 + 8*y, piece};
-                        move.score = 0;
+                        move.score = centrality[position % 8 + 8*y];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -897,7 +910,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position % 8 + 8*y), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position % 8 + 8*y, piece};
-                        move.score = 0;
+                        move.score = centrality[position % 8 + 8*y];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -913,7 +926,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, (position/8) *8 + x, piece};
-                        move.score = 0;
+                        move.score = centrality[(position/8) *8 + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -929,7 +942,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << ((position/8) *8 + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, (position/8) *8 + x, piece};
-                        move.score = 0;
+                        move.score = centrality[(position/8) *8 + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -953,7 +966,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
-                        move.score = 0;
+                        move.score = centrality[8*y + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -970,7 +983,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
-                        move.score = 0;
+                        move.score = centrality[8*y + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -987,7 +1000,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
-                        move.score = 0;
+                        move.score = centrality[8*y + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1004,7 +1017,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (8*y + x), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, 8*y + x, piece};
-                        move.score = 0;
+                        move.score = centrality[8*y + x];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1025,7 +1038,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position + 8), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 8, King};
-                        move.score = 0;
+                        move.score = centrality[position + 8];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1039,7 +1052,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position + 7), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 7, King};
-                        move.score = 0;
+                        move.score = centrality[position +7];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1053,7 +1066,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position + 9), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 9, King};
-                        move.score = 0;
+                        move.score = centrality[position + 9];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1069,7 +1082,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position - 8), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position - 8, King};
-                        move.score = 0;
+                        move.score =  centrality[position- 8];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1083,7 +1096,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position -9), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -9, King};
-                        move.score = 0;
+                        move.score =  centrality[position - 9];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1097,7 +1110,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position -7), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -7, King};
-                        move.score = 0;
+                        move.score =  centrality[position - 7];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1112,7 +1125,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position -1), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position -1, King};
-                        move.score = 0;
+                        move.score = centrality[position - 1];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1126,7 +1139,7 @@ void generateMoves(struct gameBoard *Game, struct MoveList *moves, enum Color co
                     int z = CheckCollision(1ULL << (position + 1), Game, &newGame, !color);
                     if (!inCheck(&newGame, color)) {
                         struct Move move = {position, position + 1, King};
-                        move.score = 0;
+                        move.score = centrality[position + 1];
                         if (z) move.score += pieceValue[z-1]*10 - pieceValue[piece];
                         if (gameOver(!color, &newGame) == Checkmate) move.score += 1000000;
                         else if (inCheck(&newGame, !color)) move.score += 200;
@@ -1822,19 +1835,19 @@ int gameOver (enum Color turn, struct gameBoard *game) //check if "turn" color l
     if (inCheck(game, turn)) return Checkmate;
     return Stalemate;
 }
-int Nodes = 0;
-int get_Nodes() {
+
+long long unsigned int get_Nodes() {
     return Nodes;
 }
-void set_Nodes(int i) {
+void set_Nodes(long long unsigned int i) {
     Nodes = i;
 }
 //ASSUME ITS WHITE PLAYING AS MAXIMIZING
-int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack) {
+int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximizingPlayer, struct Move *Move, struct TTEntry *table, struct Stack *stack, int *nmp) {
     Nodes += 1;
     unsigned long long int hash = computeHash(Game, !maximizingPlayer);
     int x = gameOver(!maximizingPlayer, Game);
-    if (search(stack, hash) >= 2) return 0; //fix stalemate logic
+    if (search(stack, hash) >= 2) return 0; //stalemate for repeated position
     if (x == Stalemate) return 0;
     else if (x == Checkmate) {
         if (maximizingPlayer) return -INF + (DEPTH - depth);
@@ -1843,9 +1856,13 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
         }
     }
 
+    //evaluate position at final leaf nodes
     if (depth == 0) return evaluate(Game, !maximizingPlayer);
 
+
     struct TTEntry *entry = probe(hash, table);
+    
+    //check if TTEntry is in table -> can possible return value and skip further search
     
     if (entry && entry->depth >= depth) {
         if (entry->flag == EXACT) {
@@ -1861,30 +1878,47 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             return entry->score;
         }
     }
+        
     struct Move BestMove;
     int eval;
     int originalAlpha = alpha, originalBeta = beta;
+    
+    //Null move pruning
+    //Apply null move (nothing just switch turns), if evaluation of move is still high even by giving opponent turn -> move is too good, opponent will not allow you to play this route -> can skip in search tree
+    //only applicable when nmp if false -> we dont want to recursively continue to call this when already searching a null move
+    if (!(*nmp) && depth > R && Phase(Game) > threshold && depth < DEPTH && evaluate(Game, !maximizingPlayer) >= beta && !inCheck(Game, !maximizingPlayer)) {
+        struct gameBoard NullBoard = *Game;
+        struct Move dummy;
+        NullBoard.enPassant[White] = 8;
+        NullBoard.enPassant[Black] = 8;
+        push(stack, computeHash(&NullBoard, maximizingPlayer));
+        *nmp = 1;
+        int score = -alphabeta(depth - R, &NullBoard, -beta, -beta + 1, !maximizingPlayer, &dummy, table, stack, nmp);
+        *nmp = 0;
+        pop(stack);
+        if (score >= beta) return beta;
+    }
 
     struct MoveList moves;
     generateMoves(Game, &moves, !maximizingPlayer);
     InsertSort(moves.moves, moves.count);
-    
+
     //Maximizing Player
     if (maximizingPlayer) {
+        
         int maxEval = -INF;
         struct Move move;
         struct gameBoard newGame;
         for (int i = 0; i < moves.count; ++i) {
             newGame = *Game;
-
             move = moves.moves[i];
-            //apply move
             
+            //apply move
             newGame.game[White][move.piece] ^= (1ULL << move.start);
             newGame.game[White][move.piece] |= (1ULL << move.end);
-
             int captured = CheckCollision((1ULL << move.end), &newGame, &newGame, maximizingPlayer);            
-            //if we captured a rook
+            
+            //if we captured a rook -> update castle rights
             if (captured - 1 == Rook) {
                 if (move.end == 56) {
                     if (Game->BlackCastle == BlackBoth) newGame.BlackCastle = BlackQueen;
@@ -1944,11 +1978,11 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
 
             push(stack, computeHash(&newGame, Black));
             
-            eval = alphabeta(depth-1, &newGame, alpha, beta, 0, Move, table, stack);
+            eval = alphabeta(depth-1, &newGame, alpha, beta, 0, Move, table, stack, nmp);
 
             pop(stack);
 
-
+            //alpha beta pruning
             if (eval > maxEval) {
                 maxEval = eval;
                 BestMove = move;
@@ -1956,6 +1990,9 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
             }
             alpha = max(alpha, eval);
             if (beta <= alpha) break;
+            if (depth == DEPTH) {
+                printf("Move %d complete - %lld nodes\n", i, get_Nodes());
+            }
         }
 
         int flag;
@@ -1966,6 +2003,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
         return maxEval;
     }
     else {
+        //EXACT same logic, just trying to minimize the possible eval score rather than maximize
         int minEval = INF;
         struct Move move;
         struct gameBoard newGame;
@@ -2031,7 +2069,7 @@ int alphabeta(int depth, struct gameBoard *Game, int alpha, int beta, int maximi
 
             push(stack, computeHash(&newGame, White));
             
-            eval = alphabeta(depth-1, &newGame, alpha, beta, 1, Move, table, stack);
+            eval = alphabeta(depth-1, &newGame, alpha, beta, 1, Move, table, stack, nmp);
             
             pop(stack);
 

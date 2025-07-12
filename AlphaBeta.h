@@ -1,5 +1,11 @@
 #define MAX_MOVES 128
 #define DEPTH 7
+//radius of search for null move pruning
+#define R 4
+
+//minimum value of phase for null pruning
+#define threshold 12
+
 #define INF 1000000
 #define TT_SIZE (1 << 22)
 
@@ -64,10 +70,10 @@ int MoreMoves(struct gameBoard *Game, enum Color color);
 
 int gameOver(enum Color turn, struct gameBoard *game);
 
-int get_Nodes();
+long long unsigned int get_Nodes();
 
-void set_Nodes(int v);
+void set_Nodes(long long unsigned int v);
 
 int search(struct Stack *stack, unsigned long long int value);
 
-int alphabeta(int depth, struct gameBoard *game, int alpha, int beta, int maximizingPlayer, struct Move *move, struct TTEntry *table, struct Stack *stack);
+int alphabeta(int depth, struct gameBoard *game, int alpha, int beta, int maximizingPlayer, struct Move *move, struct TTEntry *table, struct Stack *stack, int *nmp);
