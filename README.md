@@ -3,7 +3,7 @@
 A lightweight chess engine written in C with Alpha-Beta pruning, transposition tables, move ordering, and null move pruning. Capable of competing at ~2000 Elo.
 
 ## Setup
-git clone git@github.com:AbdouMurad/Chesster.git
+git clone git@github.com:AbdouMurad/Chesster.git  
 cd Chesster
 ## Build and Run
 gcc -c main.c AlphaBeta.c Board.c  
@@ -27,7 +27,7 @@ When simulating a null move (nothing happens the turn just switches with no piec
 ## Performance
 Below is a link to my linkedin post which includes a video showcasing the performance of this engine against a 2000 elo bot on chess.com. 
 
-//
+https://www.linkedin.com/posts/abdou-murad_i-built-a-chess-engine-in-c-that-was-able-activity-7349694234955837441-pJ5p?utm_source=share&utm_medium=member_desktop&rcm=ACoAADzSOw4BQIQicHUIr3D9t5m1VgVBTXQ3B8g
 
 ![Performance Graph](images/Graph(1).png)
 The above graph shows the node count for every move played. It displays the performance of the engine with AlphaBeta + MoveOrdering, AlphaBeta + MoveOrdering + NullMovePruning, and finally AlphaBeta + MoveOrdering + NullMovePruning + Transposition Table
