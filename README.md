@@ -29,7 +29,7 @@ Below is a link to my linkedin post which includes a video showcasing the perfor
 
 //
 
-![Performance Graph](images/Graph(1).png)
+![Performance Graph](images/Graph (1).png)
 The above graph shows the node count for every move played. It displays the performance of the engine with AlphaBeta + MoveOrdering, AlphaBeta + MoveOrdering + NullMovePruning, and finally AlphaBeta + MoveOrdering + NullMovePruning + Transposition Table
 
 AlphaBeta + MoveOrdering and AlphaBeta + MoveOrdering + NullMovePruning have a very similar line and result in identical numbers except for some moves where NullMovePruning nearly halves the node count. On average NullMoveOrdering caused an improvement of on average around 3%. 
